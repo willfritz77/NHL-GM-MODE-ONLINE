@@ -2,7 +2,7 @@
 
 A browser-based NHL General Manager simulation game. No install, no server — just open the HTML file and play.
 
-**[▶ Play it live](https://[yourusername].github.io/nhl-gm-mode/gm-mode.html)** ← update this link after enabling GitHub Pages
+**[▶ Play it live](https://willfritz77.github.io/nhl-gm-mode/gm-mode.html)** ← update this link after enabling GitHub Pages
 
 ---
 
@@ -24,7 +24,7 @@ Just download `gm-mode.html` and open it in any modern browser (Chrome, Firefox,
 
 ```
 # Or clone and open:
-git clone https://github.com/[yourusername]/nhl-gm-mode.git
+git clone https://github.com/willfritz77/nhl-gm-mode.git
 cd nhl-gm-mode
 open gm-mode.html   # Mac
 start gm-mode.html  # Windows

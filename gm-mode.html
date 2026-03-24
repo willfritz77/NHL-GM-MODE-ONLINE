@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHL GM MODE — 2025-26</title>
+<style>
+:root {
+  --bg: #0a0c0f;
+  --bg2: #111418;
+  --bg3: #181c22;
+  --border: #1e242d;
+  --ice: #4fc3f7;
+  --ice2: #29b6f6;
+  --red: #ef5350;
+  --green: #66bb6a;
+  --gold: #ffa726;
+  --text: #e8eaed;
+  --text2: #8d96a3;
+  --text3: #4a5568;
+  --mono: 'Courier New', monospace;
+  --cap: 95500000;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; overflow-x: hidden; }
+button { cursor: pointer; border: none; background: none; color: inherit; font-family: inherit; font-size: inherit; }
+input, select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 4px; font-family: inherit; font-size: 12px; outline: none; }
+input:focus, select:focus { border-color: var(--ice); }
+.hidden { display: none !important; }
+
+/* ── LOADING ── */
+#loading-overlay {
+  position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.load-puck { font-size: 56px; animation: spin 1.2s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-title { font-family: var(--mono); font-size: 20px; color: var(--ice); letter-spacing: 3px; }
+.load-sub { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+.load-bar-wrap { width: 280px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.load-bar { height: 100%; background: var(--ice); border-radius: 2px; width: 0; transition: width 0.3s; }
+
+/* ── INTRO ── */
+#intro {
+  position: fixed; inset: 0; background: var(--bg); z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+}
+.intro-logo { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 4px; margin-bottom: 16px; }
+.intro-title { font-size: 48px; font-weight: 900; letter-spacing: -2px; color: var(--text); margin-bottom: 4px; }
+.intro-title span { color: var(--ice); }
+.intro-season { font-family: var(--mono); font-size: 13px; color: var(--text2); margin-bottom: 40px; }
+.intro-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 32px; width: 380px; display: flex; flex-direction: column; gap: 14px;
+}
+.inp-label { font-size: 10px; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.intro-card input { width: 100%; }
+.btn { padding: 10px 20px; border-radius: 5px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; transition: opacity 0.15s; }
+.btn:hover { opacity: 0.85; }
+.btn-ice { background: var(--ice); color: #000; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-outline:hover { border-color: var(--ice); color: var(--ice); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-green { background: var(--green); color: #000; }
+.w-full { width: 100%; }
+.intro-tabs { display: flex; gap: 8px; }
+.itab { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; color: var(--text2); text-align: center; cursor: pointer; }
+.itab.active { border-color: var(--ice); color: var(--ice); background: rgba(79,195,247,.08); }
+
+/* ── TEAM SELECT ── */
+#team-select {
+  position: fixed; inset: 0; background: var(--bg); z-index: 90;
+  display: flex; flex-direction: column;
+}
+.ts-header { padding: 20px 28px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.ts-title { font-family: var(--mono); font-size: 14px; color: var(--ice); letter-spacing: 2px; }
+.ts-filters { display: flex; gap: 6px; }
+.filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 10px; color: var(--text2); cursor: pointer; }
+.filter-btn.active { border-color: var(--ice); color: var(--ice); }
+.ts-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+.div-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 2px; margin: 16px 0 8px; text-transform: uppercase; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.team-tile {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.team-tile:hover { border-color: var(--ice); background: var(--bg3); }
+.t-logo { width: 38px; height: 38px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 700; flex-shrink: 0; }
+.t-name { font-size: 12px; font-weight: 600; }
+.t-cap { font-family: var(--mono); font-size: 9px; }
+.cap-ok { color: var(--green); }
+.cap-warn { color: var(--gold); }
+.cap-tight { color: var(--red); }
+
+/* ── APP SHELL ── */
+#app { display: none; height: 100vh; flex-direction: column; }
+#app.visible { display: flex; }
+.top-bar {
+  height: 48px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+}
+.tb-logo { width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 700; }
+.tb-name { font-weight: 700; font-size: 13px; }
+.tb-gm { font-size: 10px; color: var(--text2); }
+.tb-cap { font-family: var(--mono); font-size: 10px; margin-left: auto; }
+.cap-good { color: var(--green); } .cap-low { color: var(--gold); } .cap-over { color: var(--red); }
+.tb-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-size: 10px; color: var(--text2); margin-left: 8px; }
+.tb-btn:hover { border-color: var(--ice); color: var(--ice); }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+.sidebar {
+  width: 180px; background: var(--bg2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 12px 8px; gap: 2px; flex-shrink: 0;
+}
+.nav-section { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; padding: 8px 8px 4px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 5px;
+  font-size: 12px; color: var(--text2); cursor: pointer; transition: all 0.12s; width: 100%;
+}
+.nav-btn:hover { background: var(--bg3); color: var(--text); }
+.nav-btn.active { background: rgba(79,195,247,.12); color: var(--ice); }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; }
+.content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.view { display: none; }
+.view.active { display: block; }
+.view-title { font-family: var(--mono); font-size: 11px; color: var(--ice); letter-spacing: 2px; margin-bottom: 18px; text-transform: uppercase; }
+
+/* ── PANELS & CARDS ── */
+.panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 14px; }
+.panel-title { padding: 10px 14px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text2); letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; }
+.panel-body { padding: 14px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row + .row { margin-top: 6px; }
+
+/* ── TABLES ── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 400; }
+.tbl td { padding: 7px 8px; border-bottom: 1px solid rgba(30,36,45,.6); font-size: 12px; }
+.tbl tr:hover td { background: rgba(79,195,247,.04); }
+.tbl tr:last-child td { border-bottom: none; }
+.mono { font-family: var(--mono); }
+.text-dim { color: var(--text2); }
+.text-muted { color: var(--text3); }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-family: var(--mono); font-weight: 600; }
+.badge-ir { background: rgba(239,83,80,.15); color: var(--red); border: 1px solid rgba(239,83,80,.3); }
+.badge-ahl { background: rgba(255,167,38,.12); color: var(--gold); border: 1px solid rgba(255,167,38,.25); }
+.badge-ntc { background: rgba(79,195,247,.1); color: var(--ice); border: 1px solid rgba(79,195,247,.25); }
+.rtg { display: inline-block; width: 30px; text-align: center; padding: 2px 0; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 700; }
+.rtg-high { background: rgba(102,187,106,.15); color: var(--green); }
+.rtg-mid { background: rgba(255,167,38,.12); color: var(--gold); }
+.rtg-low { background: rgba(239,83,80,.1); color: var(--red); }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab { padding: 8px 16px; font-size: 11px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.12s; }
+.tab.active { color: var(--ice); border-bottom-color: var(--ice); }
+
+/* ── TRADE BUILDER ── */
+.trade-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 12px; align-items: start; }
+.trade-side { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+.trade-middle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding-top: 40px; }
+.trade-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: var(--bg2); border-radius: 4px; margin-bottom: 4px; font-size: 11px; }
+.trade-item .rm { color: var(--red); cursor: pointer; font-size: 14px; line-height: 1; }
+
+/* ── NEWS ── */
+.news-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.news-item:last-child { border-bottom: none; }
+.news-tag { font-family: var(--mono); font-size: 8px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; font-weight: 700; letter-spacing: 0.5px; }
+.tag-trade { background: rgba(79,195,247,.15); color: var(--ice); }
+.tag-sign { background: rgba(102,187,106,.15); color: var(--green); }
+.tag-injury { background: rgba(239,83,80,.15); color: var(--red); }
+.tag-waive { background: rgba(255,167,38,.12); color: var(--gold); }
+.tag-info { background: rgba(100,100,100,.15); color: var(--text2); }
+.news-text { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+/* ── MODAL ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px; min-width: 360px; max-width: 520px; }
+.modal-title { font-family: var(--mono); font-size: 12px; color: var(--ice); letter-spacing: 1px; margin-bottom: 16px; }
+.modal-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+/* ── TOAST ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 18px; font-size: 12px; z-index: 1000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+#toast.show { opacity: 1; }
+
+/* ── DASHBOARD ── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
+.stat-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; margin-bottom: 6px; }
+.stat-val { font-size: 22px; font-weight: 700; font-family: var(--mono); }
+.stat-sub { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* ── MISC ── */
+.mb8 { margin-bottom: 8px; }
+.mb12 { margin-bottom: 12px; }
+.mb16 { margin-bottom: 16px; }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.gap8 { gap: 8px; }
+.gap12 { gap: 12px; }
+.text-right { text-align: right; }
+.detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--text2); }
+select.sm { font-size: 11px; padding: 5px 8px; }
+.color-stripe { height: 3px; border-radius: 0 0 6px 6px; }
+.cap-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 4px 0; }
+.cap-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.player-name-link { cursor: pointer; }
+.player-name-link:hover { color: var(--ice); }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="load-puck">🏒</div>
+  <div class="load-title">NHL GM MODE</div>
+  <div class="load-sub" id="load-msg">Connecting to NHL.com...</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-sub" id="load-count" style="font-size:10px">0 / 32 teams</div>
+</div>
+
+<!-- INTRO -->
+<div id="intro" class="hidden">
+  <div class="intro-logo">🏒 NHL</div>
+  <div class="intro-title">GM <span>MODE</span></div>
+  <div class="intro-season">2025 – 26 SEASON</div>
+  <div class="intro-card">
+    <div class="intro-tabs mb8">
+      <div class="itab active" id="tab-solo" onclick="switchIntroTab('solo')">Solo GM</div>
+      <div class="itab" id="tab-league" onclick="switchIntroTab('league')">League</div>
+      <div class="itab" id="tab-load" onclick="switchIntroTab('load')">Continue</div>
+    </div>
+    <div id="pane-solo">
+      <div class="inp-label">Your Name</div>
+      <input id="inp-name" placeholder="Enter GM name..." value="GM" style="margin-bottom:12px">
+      <button class="btn btn-ice w-full" onclick="startSolo()">START GAME</button>
+    </div>
+    <div id="pane-league" class="hidden">
+      <div class="inp-label">Your Name</div>
+      <input id="inp-lg-name" placeholder="Enter GM name..." style="margin-bottom:10px">
+      <div class="inp-label">League Name</div>
+      <input id="inp-lg-league" placeholder="Enter league name..." style="margin-bottom:12px">
+      <button class="btn btn-ice w-full" onclick="startLeague()">CREATE LEAGUE</button>
+    </div>
+    <div id="pane-load" class="hidden">
+      <div class="inp-label">Saved Games</div>
+      <div id="saves-list" style="margin-bottom:12px"></div>
+      <button class="btn btn-outline w-full" onclick="deleteSave()">🗑 Delete Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEAM SELECT -->
+<div id="team-select" class="hidden">
+  <div class="ts-header">
+    <div class="ts-title">SELECT YOUR TEAM</div>
+    <div class="ts-filters">
+      <div class="filter-btn active" onclick="confFilter('all',this)">All</div>
+      <div class="filter-btn" onclick="confFilter('East',this)">East</div>
+      <div class="filter-btn" onclick="confFilter('West',this)">West</div>
+    </div>
+  </div>
+  <div class="ts-body" id="ts-body"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="tb-logo" id="tb-logo">NHL</div>
+    <div>
+      <div class="tb-name" id="tb-name">Team</div>
+      <div class="tb-gm" id="tb-gm">GM</div>
+    </div>
+    <div class="tb-cap" id="tb-cap"></div>
+    <button class="tb-btn" onclick="switchTeam()">Switch Team</button>
+    <button class="tb-btn" onclick="saveGame()">💾 Save</button>
+  </div>
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-section">MANAGEMENT</div>
+      <button class="nav-btn active" onclick="go('dashboard')"><span class="nav-icon">📊</span>War Room</button>
+      <button class="nav-btn" onclick="go('roster')"><span class="nav-icon">🏒</span>Roster</button>
+      <button class="nav-btn" onclick="go('ahl')"><span class="nav-icon">🌱</span>AHL Farm</button>
+      <div class="nav-section">TRANSACTIONS</div>
+      <button class="nav-btn" onclick="go('trades')"><span class="nav-icon">🔄</span>Trades</button>
+      <button class="nav-btn" onclick="go('waivers')"><span class="nav-icon">📋</span>Waivers</button>
+      <button class="nav-btn" onclick="go('fa')"><span class="nav-icon">✍️</span>Free Agents</button>
+      <button class="nav-btn" onclick="go('contracts')"><span class="nav-icon">📝</span>Contracts</button>
+      <div class="nav-section">LEAGUE</div>
+      <button class="nav-btn" onclick="go('standings')"><span class="nav-icon">🏆</span>Standings</button>
+      <button class="nav-btn" onclick="go('draft')"><span class="nav-icon">🎯</span>Draft</button>
+      <button class="nav-btn" onclick="go('sim')"><span class="nav-icon">▶</span>Simulate</button>
+    </div>
+    <!-- CONTENT -->
+    <div class="content">
+      <div id="view-dashboard" class="view active"></div>
+      <div id="view-roster" class="view"></div>
+      <div id="view-ahl" class="view"></div>
+      <div id="view-trades" class="view"></div>
+      <div id="view-waivers" class="view"></div>
+      <div id="view-fa" class="view"></div>
+      <div id="view-contracts" class="view"></div>
+      <div id="view-standings" class="view"></div>
+      <div id="view-draft" class="view"></div>
+      <div id="view-sim" class="view"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg" class="modal-bg hidden" onclick="if(event.target===this)closeModal()">
+  <div id="modal-box" class="modal"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── CORE HELPERS ───────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+
+function fmt$(n) {
+  if (!n && n !== 0) return 'N/A';
+  const m = n / 1e6;
+  return '$' + (m >= 1 ? m.toFixed(2) + 'M' : (n / 1e3).toFixed(0) + 'K');
+}
+
+function rtgClass(r) { return r >= 85 ? 'rtg-high' : r >= 73 ? 'rtg-mid' : 'rtg-low'; }
+
+function toast(msg, type) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.borderColor = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--border)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function closeModal() { $('modal-bg').classList.add('hidden'); }
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── CONSTANTS & GAME STATE ──────────────────────────────────────
+const CAP = 95500000;
+
+let GS = {
+  team: null, gm: 'GM', league: null, leagueCode: null,
+  news: [], mode: 'solo', standings: null,
+};
+
+function capUsed(abbr) {
+  return (ROSTERS[abbr] || [])
+    .filter(p => p.status === 'NHL' || p.status === 'IR' || p.status === 'LTIR')
+    .reduce((s, p) => s + (p.cap || 0), 0);
+}
+
+function addNews(tag, cls, text) {
+  GS.news.unshift({ tag, cls, text, time: new Date().toLocaleDateString() });
+  if (GS.news.length > 60) GS.news.pop();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  TEAM DATA
+// ──────────────────────────────────────────────────────────────
+const TEAMS = {
+  ANA:{name:"Anaheim Ducks",    c1:"#F47A38",c2:"#B9975B",ahl:"San Diego Gulls",   ovr:74,conf:"West",div:"Pacific"},
+  BOS:{name:"Boston Bruins",    c1:"#FFB81C",c2:"#000000",ahl:"Providence Bruins", ovr:82,conf:"East",div:"Atlantic"},
+  BUF:{name:"Buffalo Sabres",   c1:"#003087",c2:"#FCB514",ahl:"Rochester Americans",ovr:79,conf:"East",div:"Atlantic"},
+  CAR:{name:"Carolina Hurricanes",c1:"#CC0000",c2:"#FFFFFF",ahl:"Chicago Wolves",  ovr:86,conf:"East",div:"Metropolitan"},
+  CBJ:{name:"Columbus Blue Jackets",c1:"#002654",c2:"#CE1126",ahl:"Cleveland Monsters",ovr:77,conf:"East",div:"Metropolitan"},
+  CGY:{name:"Calgary Flames",   c1:"#C8102E",c2:"#F1BE48",ahl:"Calgary Wranglers", ovr:75,conf:"West",div:"Pacific"},
+  CHI:{name:"Chicago Blackhawks",c1:"#CF0A2C",c2:"#000000",ahl:"Rockford IceHogs", ovr:74,conf:"West",div:"Central"},
+  COL:{name:"Colorado Avalanche",c1:"#6F263D",c2:"#236192",ahl:"Colorado Eagles",  ovr:92,conf:"West",div:"Central"},
+  DAL:{name:"Dallas Stars",     c1:"#006847",c2:"#8F8F8C",ahl:"Texas Stars",       ovr:89,conf:"West",div:"Central"},
+  DET:{name:"Detroit Red Wings",c1:"#CE1126",c2:"#FFFFFF",ahl:"Grand Rapids Griffins",ovr:82,conf:"East",div:"Atlantic"},
+  EDM:{name:"Edmonton Oilers",  c1:"#FF4C00",c2:"#003087",ahl:"Bakersfield Condors",ovr:88,conf:"West",div:"Pacific"},
+  FLA:{name:"Florida Panthers", c1:"#041E42",c2:"#C8102E",ahl:"Charlotte Checkers",ovr:84,conf:"East",div:"Atlantic"},
+  LAK:{name:"Los Angeles Kings",c1:"#111111",c2:"#A2AAAD",ahl:"Ontario Reign",     ovr:78,conf:"West",div:"Pacific"},
+  MIN:{name:"Minnesota Wild",   c1:"#154734",c2:"#A6192E",ahl:"Iowa Wild",         ovr:86,conf:"West",div:"Central"},
+  MTL:{name:"Montréal Canadiens",c1:"#AF1E2D",c2:"#192168",ahl:"Laval Rocket",     ovr:79,conf:"East",div:"Atlantic"},
+  NJD:{name:"New Jersey Devils",c1:"#CE1126",c2:"#000000",ahl:"Utica Comets",      ovr:84,conf:"East",div:"Metropolitan"},
+  NSH:{name:"Nashville Predators",c1:"#FFB81C",c2:"#041E42",ahl:"Milwaukee Admirals",ovr:82,conf:"West",div:"Central"},
+  NYI:{name:"New York Islanders",c1:"#00539B",c2:"#F47D30",ahl:"Bridgeport Islanders",ovr:83,conf:"East",div:"Metropolitan"},
+  NYR:{name:"New York Rangers", c1:"#0038A8",c2:"#CE1126",ahl:"Hartford Wolf Pack",ovr:80,conf:"East",div:"Metropolitan"},
+  OTT:{name:"Ottawa Senators",  c1:"#C8102E",c2:"#C69214",ahl:"Belleville Senators",ovr:82,conf:"East",div:"Atlantic"},
+  PHI:{name:"Philadelphia Flyers",c1:"#F74902",c2:"#000000",ahl:"Lehigh Valley Phantoms",ovr:78,conf:"East",div:"Metropolitan"},
+  PIT:{name:"Pittsburgh Penguins",c1:"#FCB514",c2:"#000000",ahl:"Wilkes-Barre/Scranton Penguins",ovr:80,conf:"East",div:"Metropolitan"},
+  SEA:{name:"Seattle Kraken",   c1:"#001628",c2:"#99D9D9",ahl:"Coachella Valley Firebirds",ovr:78,conf:"West",div:"Pacific"},
+  SJS:{name:"San Jose Sharks",  c1:"#006D75",c2:"#EA7200",ahl:"San Jose Barracuda",ovr:77,conf:"West",div:"Pacific"},
+  STL:{name:"St. Louis Blues",  c1:"#002F87",c2:"#FCB514",ahl:"Springfield Thunderbirds",ovr:79,conf:"West",div:"Central"},
+  TBL:{name:"Tampa Bay Lightning",c1:"#002868",c2:"#FFFFFF",ahl:"Syracuse Crunch",  ovr:88,conf:"East",div:"Atlantic"},
+  TOR:{name:"Toronto Maple Leafs",c1:"#00205B",c2:"#FFFFFF",ahl:"Toronto Marlies",  ovr:85,conf:"East",div:"Atlantic"},
+  UTA:{name:"Utah Mammoth",     c1:"#6CACE4",c2:"#1C4C8A",ahl:"Tucson Roadrunners",ovr:79,conf:"West",div:"Central"},
+  VAN:{name:"Vancouver Canucks",c1:"#00205B",c2:"#00843D",ahl:"Abbotsford Canucks",ovr:81,conf:"West",div:"Pacific"},
+  VGK:{name:"Vegas Golden Knights",c1:"#B4975A",c2:"#333F48",ahl:"Henderson Silver Knights",ovr:85,conf:"West",div:"Pacific"},
+  WPG:{name:"Winnipeg Jets",    c1:"#041E42",c2:"#004C97",ahl:"Manitoba Moose",    ovr:83,conf:"West",div:"Central"},
+  WSH:{name:"Washington Capitals",c1:"#041E42",c2:"#C8102E",ahl:"Hershey Bears",   ovr:82,conf:"East",div:"Metropolitan"},
+};
+
+// Game uses 'UTA' as the abbreviation (matches NHL API)
+// We also alias UTAH -> UTA for any legacy references
+const TEAM_ABBRS = Object.keys(TEAMS);
+
+// ──────────────────────────────────────────────────────────────
+//  ROSTERS — NHL.com projected lineups, March 15-18, 2026
+//  Source: nhl.com game previews (official projected lineups)
+// ──────────────────────────────────────────────────────────────
+const ROSTERS = {
+BOS:[
+  {id:"bos_1",name:"David Pastrnak",pos:"RW",age:30,cap:11250000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:94,status:"NHL",g:34,a:46,pts:80,gp:65},
+  {id:"bos_2",name:"Fraser Minten",pos:"C",age:20,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:18,pts:28,gp:55},
+  {id:"bos_3",name:"Marat Khusnutdinov",pos:"C",age:23,cap:863333,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:14,pts:22,gp:48},
+  {id:"bos_4",name:"Casey Mittelstadt",pos:"C",age:26,cap:6200000,yrs:4,ntc:false,ntc_type:null,rtg:81,status:"NHL",g:18,a:28,pts:46,gp:62},
+  {id:"bos_5",name:"Pavel Zacha",pos:"C",age:27,cap:4750000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:26,pts:42,gp:62},
+  {id:"bos_6",name:"Viktor Arvidsson",pos:"RW",age:33,cap:3437500,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:16,pts:28,gp:54},
+  {id:"bos_7",name:"Tanner Jeannot",pos:"LW",age:27,cap:2625000,yrs:3,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:10,a:12,pts:22,gp:56},
+  {id:"bos_8",name:"Elias Lindholm",pos:"C",age:30,cap:6500000,yrs:4,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:20,a:30,pts:50,gp:60},
+  {id:"bos_9",name:"Morgan Geekie",pos:"C",age:28,cap:1600000,yrs:1,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:10,a:14,pts:24,gp:58},
+  {id:"bos_10",name:"Michael Eyssimont",pos:"LW",age:28,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:65,status:"NHL",g:5,a:7,pts:12,gp:44},
+  {id:"bos_11",name:"Sean Kuraly",pos:"C",age:32,cap:1850000,yrs:1,ntc:false,ntc_type:null,rtg:67,status:"NHL",g:6,a:8,pts:14,gp:52},
+  {id:"bos_12",name:"Mark Kastelic",pos:"C",age:25,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:63,status:"NHL",g:4,a:5,pts:9,gp:44},
+  {id:"bos_13",name:"Alex Steeves",pos:"LW",age:24,cap:775000,yrs:1,ntc:false,ntc_type:null,rtg:66,status:"NHL",g:6,a:8,pts:14,gp:40},
+  {id:"bos_14",name:"Lukas Reichel",pos:"LW",age:22,cap:925000,yrs:2,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:8,a:12,pts:20,gp:44},
+  {id:"bos_15",name:"Charlie McAvoy",pos:"D",age:28,cap:9500000,yrs:7,ntc:false,ntc_type:"Modified NTC",rtg:91,status:"NHL",g:10,a:42,pts:52,gp:60},
+  {id:"bos_16",name:"Jonathan Aspirot",pos:"D",age:23,cap:862500,yrs:1,ntc:false,ntc_type:null,rtg:69,status:"NHL",g:2,a:8,pts:10,gp:44},
+  {id:"bos_17",name:"Hampus Lindholm",pos:"D",age:31,cap:6500000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:6,a:28,pts:34,gp:58},
+  {id:"bos_18",name:"Mason Lohrei",pos:"D",age:23,cap:950000,yrs:2,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:4,a:14,pts:18,gp:52},
+  {id:"bos_19",name:"Nikita Zadorov",pos:"D",age:29,cap:3250000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:3,a:8,pts:11,gp:54},
+  {id:"bos_20",name:"Andrew Peeke",pos:"D",age:27,cap:2100000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:2,a:8,pts:10,gp:50},
+  {id:"bos_21",name:"Henri Jokiharju",pos:"D",age:26,cap:2700000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:3,a:9,pts:12,gp:48},
+  {id:"bos_22",name:"Jeremy Swayman",pos:"G",age:26,cap:8000000,yrs:8,ntc:false,ntc_type:null,rtg:88,status:"NHL",g:0,a:2,pts:2,gp:44},
+  {id:"bos_23",name:"Joonas Korpisalo",pos:"G",age:31,cap:4000000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:0,a:0,pts:0,gp:24},
+],
+BUF:[
+  {id:"buf_1",name:"Tage Thompson",pos:"C",age:27,cap:7142858,yrs:5,ntc:false,ntc_type:null,rtg:93,status:"NHL",g:40,a:50,pts:90,gp:64},
+  {id:"buf_2",name:"Rasmus Dahlin",pos:"D",age:25,cap:8150000,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:92,status:"NHL",g:16,a:52,pts:68,gp:60},
+  {id:"buf_3",name:"Bowen Byram",pos:"D",age:23,cap:6250000,yrs:2,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:10,a:32,pts:42,gp:58},
+  {id:"buf_4",name:"Alex Tuch",pos:"LW",age:28,cap:4500000,yrs:4,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:18,a:28,pts:46,gp:56},
+  {id:"buf_5",name:"Owen Power",pos:"D",age:22,cap:925000,yrs:2,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:7,a:24,pts:31,gp:60},
+  {id:"buf_6",name:"Josh Norris",pos:"C",age:26,cap:4000000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:16,a:22,pts:38,gp:52},
+  {id:"buf_7",name:"Noah Ostlund",pos:"C",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:18,pts:30,gp:52},
+  {id:"buf_8",name:"Jack Quinn",pos:"RW",age:23,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:14,a:18,pts:32,gp:54},
+  {id:"buf_9",name:"Peyton Krebs",pos:"C",age:24,cap:2150000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:18,pts:28,gp:58},
+  {id:"buf_10",name:"Zach Benson",pos:"LW",age:20,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:12,a:18,pts:30,gp:58},
+  {id:"buf_11",name:"Ryan McLeod",pos:"C",age:24,cap:1800000,yrs:3,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:10,a:14,pts:24,gp:58},
+  {id:"buf_12",name:"Josh Doan",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:12,pts:22,gp:48},
+  {id:"buf_13",name:"Jason Zucker",pos:"LW",age:34,cap:2000000,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:8,a:10,pts:18,gp:48},
+  {id:"buf_14",name:"Beck Malenstyn",pos:"LW",age:26,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:61,status:"NHL",g:3,a:4,pts:7,gp:40},
+  {id:"buf_15",name:"Tanner Pearson",pos:"LW",age:33,cap:750000,yrs:1,ntc:false,ntc_type:null,rtg:67,status:"NHL",g:5,a:6,pts:11,gp:42},
+  {id:"buf_16",name:"Sam Carrick",pos:"C",age:32,cap:800000,yrs:1,ntc:false,ntc_type:null,rtg:64,status:"NHL",g:3,a:4,pts:7,gp:38},
+  {id:"buf_17",name:"Mattias Samuelsson",pos:"D",age:25,cap:3300000,yrs:4,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:14,pts:18,gp:56},
+  {id:"buf_18",name:"Michael Kesselring",pos:"D",age:24,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:3,a:9,pts:12,gp:46},
+  {id:"buf_19",name:"Logan Stanley",pos:"D",age:27,cap:1375000,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:2,a:6,pts:8,gp:52},
+  {id:"buf_20",name:"Ukko-Pekka Luukkonen",pos:"G",age:25,cap:3800000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:0,pts:0,gp:32},
+  {id:"buf_21",name:"Colten Ellis",pos:"G",age:23,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:0,a:0,pts:0,gp:22},
+  {id:"buf_22",name:"Jiri Kulich",pos:"RW",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"IR",g:0,a:0,pts:0,gp:0},
+],
+DET:[
+  {id:"det_1",name:"Dylan Larkin",pos:"C",age:29,cap:8700000,yrs:5,ntc:true,ntc_type:"Full NTC",rtg:88,status:"NHL",g:26,a:42,pts:68,gp:60},
+  {id:"det_2",name:"Lucas Raymond",pos:"RW",age:23,cap:5750000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:24,a:38,pts:62,gp:62},
+  {id:"det_3",name:"Moritz Seider",pos:"D",age:24,cap:7000000,yrs:6,ntc:false,ntc_type:null,rtg:87,status:"NHL",g:10,a:40,pts:50,gp:62},
+  {id:"det_4",name:"Patrick Kane",pos:"RW",age:37,cap:2750000,yrs:1,ntc:false,ntc_type:"Modified NTC",rtg:79,status:"NHL",g:16,a:28,pts:44,gp:54},
+  {id:"det_5",name:"Andrew Copp",pos:"C",age:30,cap:5625000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:14,a:22,pts:36,gp:58},
+  {id:"det_6",name:"Justin Faulk",pos:"D",age:33,cap:6500000,yrs:1,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:4,a:14,pts:18,gp:52},
+  {id:"det_7",name:"Jake Walman",pos:"D",age:29,cap:3500000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:5,a:18,pts:23,gp:56},
+  {id:"det_8",name:"David Perron",pos:"RW",age:37,cap:2750000,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:12,a:18,pts:30,gp:52},
+  {id:"det_9",name:"Jonatan Berggren",pos:"RW",age:24,cap:775000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:10,a:14,pts:24,gp:50},
+  {id:"det_10",name:"Robby Fabbri",pos:"C",age:29,cap:1500000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:12,pts:20,gp:48},
+  {id:"det_11",name:"Ville Husso",pos:"G",age:29,cap:4750000,yrs:2,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:0,a:1,pts:1,gp:34},
+  {id:"det_12",name:"James Reimer",pos:"G",age:37,cap:1150000,yrs:1,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:0,a:0,pts:0,gp:28},
+  {id:"det_13",name:"Simon Edvinsson",pos:"D",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"AHL",g:0,a:0,pts:0,gp:0},
+],
+FLA:[
+  {id:"fla_1",name:"Matthew Tkachuk",pos:"LW",age:27,cap:9500000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:95,status:"NHL",g:32,a:58,pts:90,gp:62},
+  {id:"fla_2",name:"Sam Reinhart",pos:"C",age:29,cap:8500000,yrs:6,ntc:false,ntc_type:null,rtg:89,status:"IR",g:36,a:44,pts:80,gp:60},
+  {id:"fla_3",name:"Aleksander Barkov",pos:"C",age:30,cap:10000000,yrs:6,ntc:true,ntc_type:"Full NTC",rtg:97,status:"IR",g:32,a:56,pts:88,gp:58},
+  {id:"fla_4",name:"Aaron Ekblad",pos:"D",age:29,cap:8500000,yrs:4,ntc:false,ntc_type:null,rtg:86,status:"NHL",g:8,a:28,pts:36,gp:58},
+  {id:"fla_5",name:"Gustav Forsling",pos:"D",age:28,cap:4500000,yrs:2,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:6,a:26,pts:32,gp:62},
+  {id:"fla_6",name:"Seth Jones",pos:"D",age:30,cap:9500000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:82,status:"NHL",g:8,a:32,pts:40,gp:56},
+  {id:"fla_7",name:"Carter Verhaeghe",pos:"LW",age:29,cap:5000000,yrs:4,ntc:false,ntc_type:null,rtg:81,status:"NHL",g:22,a:28,pts:50,gp:62},
+  {id:"fla_8",name:"Sam Bennett",pos:"C",age:28,cap:5800000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:20,a:26,pts:46,gp:60},
+  {id:"fla_9",name:"Anton Lundell",pos:"C",age:23,cap:6500000,yrs:6,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:18,a:28,pts:46,gp:64},
+  {id:"fla_10",name:"Brad Marchand",pos:"LW",age:37,cap:5250000,yrs:6,ntc:false,ntc_type:null,rtg:78,status:"IR",g:14,a:22,pts:36,gp:52},
+  {id:"fla_11",name:"Evan Rodrigues",pos:"C",age:31,cap:1750000,yrs:1,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:10,a:14,pts:24,gp:56},
+  {id:"fla_12",name:"Eetu Luostarinen",pos:"C",age:26,cap:2450000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:58},
+  {id:"fla_13",name:"Mackie Samoskevich",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:52},
+  {id:"fla_14",name:"A.J. Greer",pos:"LW",age:28,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:62,status:"NHL",g:3,a:4,pts:7,gp:42},
+  {id:"fla_15",name:"Vinnie Hinostroza",pos:"RW",age:31,cap:800000,yrs:1,ntc:false,ntc_type:null,rtg:66,status:"NHL",g:5,a:8,pts:13,gp:44},
+  {id:"fla_16",name:"Niko Mikkola",pos:"D",age:28,cap:2250000,yrs:3,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:2,a:8,pts:10,gp:50},
+  {id:"fla_17",name:"Dmitry Kulikov",pos:"D",age:35,cap:1000000,yrs:1,ntc:false,ntc_type:null,rtg:66,status:"NHL",g:2,a:6,pts:8,gp:46},
+  {id:"fla_18",name:"Nate Schmidt",pos:"D",age:35,cap:1000000,yrs:1,ntc:false,ntc_type:null,rtg:67,status:"NHL",g:2,a:6,pts:8,gp:46},
+  {id:"fla_19",name:"Sergei Bobrovsky",pos:"G",age:37,cap:7250000,yrs:1,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:1,pts:1,gp:42},
+  {id:"fla_20",name:"Vitek Vanecek",pos:"G",age:29,cap:3000000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:0,pts:0,gp:22},
+],
+MTL:[
+  {id:"mtl_1",name:"Cole Caufield",pos:"RW",age:24,cap:7850000,yrs:6,ntc:false,ntc_type:null,rtg:89,status:"NHL",g:36,a:38,pts:74,gp:62},
+  {id:"mtl_2",name:"Nick Suzuki",pos:"C",age:26,cap:7875000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:88,status:"NHL",g:26,a:46,pts:72,gp:62},
+  {id:"mtl_3",name:"Juraj Slafkovsky",pos:"LW",age:21,cap:9200000,yrs:7,ntc:false,ntc_type:null,rtg:87,status:"NHL",g:26,a:32,pts:58,gp:60},
+  {id:"mtl_4",name:"Noah Dobson",pos:"D",age:25,cap:9500000,yrs:8,ntc:false,ntc_type:"Modified NTC",rtg:88,status:"NHL",g:12,a:44,pts:56,gp:58},
+  {id:"mtl_5",name:"Lane Hutson",pos:"D",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:8,a:22,pts:30,gp:56},
+  {id:"mtl_6",name:"Ivan Demidov",pos:"RW",age:19,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:14,a:22,pts:36,gp:52},
+  {id:"mtl_7",name:"Alex Newhook",pos:"C",age:24,cap:4000000,yrs:4,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:24,pts:38,gp:58},
+  {id:"mtl_8",name:"Oliver Kapanen",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:16,pts:26,gp:52},
+  {id:"mtl_9",name:"Phillip Danault",pos:"C",age:32,cap:5000000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:20,pts:32,gp:58},
+  {id:"mtl_10",name:"Josh Anderson",pos:"RW",age:30,cap:5500000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:16,pts:28,gp:52},
+  {id:"mtl_11",name:"Brendan Gallagher",pos:"RW",age:33,cap:6500000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:12,pts:22,gp:50},
+  {id:"mtl_12",name:"Zachary Bolduc",pos:"LW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:50},
+  {id:"mtl_13",name:"Jake Evans",pos:"C",age:28,cap:1700000,yrs:2,ntc:false,ntc_type:null,rtg:69,status:"NHL",g:7,a:11,pts:18,gp:56},
+  {id:"mtl_14",name:"Alexandre Texier",pos:"C",age:25,cap:1750000,yrs:2,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:8,a:12,pts:20,gp:54},
+  {id:"mtl_15",name:"Mike Matheson",pos:"D",age:31,cap:4875000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:6,a:24,pts:30,gp:58},
+  {id:"mtl_16",name:"Kaiden Guhle",pos:"D",age:23,cap:3500000,yrs:5,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:18,pts:22,gp:56},
+  {id:"mtl_17",name:"Jayden Struble",pos:"D",age:23,cap:800000,yrs:2,ntc:false,ntc_type:null,rtg:69,status:"NHL",g:2,a:8,pts:10,gp:46},
+  {id:"mtl_18",name:"Alexandre Carrier",pos:"D",age:28,cap:1450000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:3,a:14,pts:17,gp:54},
+  {id:"mtl_19",name:"Samuel Montembeault",pos:"G",age:27,cap:3150000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:0,a:1,pts:1,gp:38},
+  {id:"mtl_20",name:"Cayden Primeau",pos:"G",age:25,cap:825000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:0,a:0,pts:0,gp:26},
+  {id:"mtl_21",name:"Michael Hage",pos:"C",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"AHL",g:0,a:0,pts:0,gp:0},
+],
+OTT:[
+  {id:"ott_1",name:"Tim Stutzle",pos:"C",age:23,cap:8350000,yrs:6,ntc:false,ntc_type:null,rtg:89,status:"NHL",g:32,a:52,pts:84,gp:62},
+  {id:"ott_2",name:"Brady Tkachuk",pos:"LW",age:26,cap:9500000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:92,status:"NHL",g:30,a:40,pts:70,gp:62},
+  {id:"ott_3",name:"Drake Batherson",pos:"RW",age:25,cap:4950000,yrs:4,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:20,a:30,pts:50,gp:56},
+  {id:"ott_4",name:"Claude Giroux",pos:"RW",age:38,cap:6500000,yrs:1,ntc:false,ntc_type:"Modified NTC",rtg:77,status:"NHL",g:14,a:24,pts:38,gp:58},
+  {id:"ott_5",name:"Dylan Cozens",pos:"C",age:23,cap:7100000,yrs:5,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:24,a:34,pts:58,gp:60},
+  {id:"ott_6",name:"Ridly Greig",pos:"C",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:16,pts:28,gp:58},
+  {id:"ott_7",name:"Warren Foegele",pos:"LW",age:29,cap:4500000,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:14,pts:26,gp:50},
+  {id:"ott_8",name:"Shane Pinto",pos:"C",age:23,cap:2000000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:16,a:20,pts:36,gp:58},
+  {id:"ott_9",name:"Fabian Zetterlund",pos:"RW",age:25,cap:2800000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:16,pts:28,gp:56},
+  {id:"ott_10",name:"Lars Eller",pos:"C",age:36,cap:1500000,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:6,a:10,pts:16,gp:50},
+  {id:"ott_11",name:"Thomas Chabot",pos:"D",age:28,cap:8000000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:84,status:"NHL",g:6,a:30,pts:36,gp:58},
+  {id:"ott_12",name:"Artem Zub",pos:"D",age:30,cap:4500000,yrs:4,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:16,pts:20,gp:58},
+  {id:"ott_13",name:"Tyler Kleven",pos:"D",age:23,cap:875000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:2,a:8,pts:10,gp:46},
+  {id:"ott_14",name:"Jordan Spence",pos:"D",age:23,cap:875000,yrs:2,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:3,a:10,pts:13,gp:48},
+  {id:"ott_15",name:"Jake Sanderson",pos:"D",age:22,cap:7350000,yrs:7,ntc:false,ntc_type:null,rtg:87,status:"IR",g:8,a:36,pts:44,gp:52},
+  {id:"ott_16",name:"Linus Ullmark",pos:"G",age:32,cap:5000000,yrs:2,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:1,pts:1,gp:40},
+  {id:"ott_17",name:"James Reimer",pos:"G",age:37,cap:1150000,yrs:1,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:0,a:0,pts:0,gp:24},
+],
+TBL:[
+  {id:"tbl_1",name:"Nikita Kucherov",pos:"RW",age:32,cap:9500000,yrs:7,ntc:true,ntc_type:"Full NTC",rtg:98,status:"NHL",g:38,a:70,pts:108,gp:66},
+  {id:"tbl_2",name:"Brayden Point",pos:"C",age:29,cap:10500000,yrs:7,ntc:true,ntc_type:"NMC",rtg:95,status:"NHL",g:40,a:50,pts:90,gp:64},
+  {id:"tbl_3",name:"Victor Hedman",pos:"D",age:35,cap:7875000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:90,status:"NHL",g:6,a:36,pts:42,gp:54},
+  {id:"tbl_4",name:"Andrei Vasilevskiy",pos:"G",age:31,cap:9500000,yrs:3,ntc:true,ntc_type:"Full NTC",rtg:95,status:"NHL",g:0,a:2,pts:2,gp:48},
+  {id:"tbl_5",name:"Jake Guentzel",pos:"LW",age:30,cap:6750000,yrs:5,ntc:false,ntc_type:null,rtg:86,status:"NHL",g:28,a:34,pts:62,gp:60},
+  {id:"tbl_6",name:"Brandon Hagel",pos:"LW",age:27,cap:6500000,yrs:6,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:24,a:28,pts:52,gp:62},
+  {id:"tbl_7",name:"Mikhail Sergachev",pos:"D",age:26,cap:8500000,yrs:7,ntc:false,ntc_type:"Modified NTC",rtg:87,status:"NHL",g:8,a:32,pts:40,gp:60},
+  {id:"tbl_8",name:"Anthony Cirelli",pos:"C",age:28,cap:6000000,yrs:5,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:14,a:24,pts:38,gp:62},
+  {id:"tbl_9",name:"Oliver Bjorkstrand",pos:"RW",age:30,cap:5416667,yrs:2,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:18,a:26,pts:44,gp:58},
+  {id:"tbl_10",name:"Yanni Gourde",pos:"C",age:33,cap:5166667,yrs:1,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:18,pts:30,gp:56},
+  {id:"tbl_11",name:"Conor Geekie",pos:"C",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:12,pts:20,gp:48},
+  {id:"tbl_12",name:"Erik Cernak",pos:"D",age:27,cap:3650000,yrs:4,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:3,a:12,pts:15,gp:58},
+  {id:"tbl_13",name:"J.J. Moser",pos:"D",age:25,cap:2375000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:5,a:14,pts:19,gp:52},
+  {id:"tbl_14",name:"Ian Mitchell",pos:"D",age:25,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:2,a:6,pts:8,gp:42},
+  {id:"tbl_15",name:"Corey Perry",pos:"RW",age:40,cap:800000,yrs:1,ntc:false,ntc_type:null,rtg:62,status:"NHL",g:3,a:4,pts:7,gp:36},
+  {id:"tbl_16",name:"Ryan McDonagh",pos:"D",age:36,cap:6750000,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:2,a:8,pts:10,gp:44},
+],
+TOR:[
+  {id:"tor_1",name:"Auston Matthews",pos:"C",age:27,cap:13250000,yrs:6,ntc:true,ntc_type:"Full NTC",rtg:98,status:"IR",g:40,a:46,pts:86,gp:58},
+  {id:"tor_2",name:"William Nylander",pos:"RW",age:29,cap:11500000,yrs:5,ntc:true,ntc_type:"Full NTC",rtg:92,status:"NHL",g:32,a:48,pts:80,gp:64},
+  {id:"tor_3",name:"John Tavares",pos:"C",age:34,cap:11000000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:85,status:"NHL",g:18,a:32,pts:50,gp:60},
+  {id:"tor_4",name:"Mitch Marner",pos:"RW",age:28,cap:10893000,yrs:1,ntc:true,ntc_type:"Full NTC",rtg:94,status:"NHL",g:24,a:54,pts:78,gp:58},
+  {id:"tor_5",name:"Mathew Knies",pos:"LW",age:22,cap:863333,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:22,pts:38,gp:62},
+  {id:"tor_6",name:"Morgan Rielly",pos:"D",age:31,cap:7500000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:6,a:28,pts:34,gp:58},
+  {id:"tor_7",name:"Jake McCabe",pos:"D",age:30,cap:4000000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:3,a:14,pts:17,gp:56},
+  {id:"tor_8",name:"Henry Thrun",pos:"D",age:25,cap:1750000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:3,a:10,pts:13,gp:50},
+  {id:"tor_9",name:"Easton Cowan",pos:"RW",age:20,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:50},
+  {id:"tor_10",name:"Nicolas Robertson",pos:"LW",age:23,cap:762500,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:14,pts:24,gp:52},
+  {id:"tor_11",name:"Dakota Joshua",pos:"C",age:29,cap:2000000,yrs:1,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:8,a:10,pts:18,gp:52},
+  {id:"tor_12",name:"Joseph Woll",pos:"G",age:26,cap:2100000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:0,a:1,pts:1,gp:36},
+  {id:"tor_13",name:"Ilya Samsonov",pos:"G",age:27,cap:3500000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:0,pts:0,gp:28},
+],
+CAR:[
+  {id:"car_1",name:"Sebastian Aho",pos:"C",age:27,cap:8460000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:93,status:"NHL",g:34,a:54,pts:88,gp:64},
+  {id:"car_2",name:"Andrei Svechnikov",pos:"RW",age:25,cap:7750000,yrs:3,ntc:false,ntc_type:null,rtg:88,status:"NHL",g:30,a:38,pts:68,gp:62},
+  {id:"car_3",name:"Nikolaj Ehlers",pos:"LW",age:29,cap:8500000,yrs:6,ntc:false,ntc_type:null,rtg:85,status:"NHL",g:26,a:34,pts:60,gp:60},
+  {id:"car_4",name:"Seth Jarvis",pos:"C",age:23,cap:7000000,yrs:7,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:24,a:34,pts:58,gp:62},
+  {id:"car_5",name:"Logan Stankoven",pos:"C",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:16,a:22,pts:38,gp:56},
+  {id:"car_6",name:"Jackson Blake",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:16,pts:28,gp:52},
+  {id:"car_7",name:"Taylor Hall",pos:"LW",age:34,cap:3000000,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:18,pts:30,gp:50},
+  {id:"car_8",name:"Jordan Staal",pos:"C",age:37,cap:3250000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:10,a:14,pts:24,gp:58},
+  {id:"car_9",name:"K'Andre Miller",pos:"D",age:25,cap:5500000,yrs:8,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:6,a:22,pts:28,gp:60},
+  {id:"car_10",name:"Jaccob Slavin",pos:"D",age:31,cap:5300000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:4,a:24,pts:28,gp:60},
+  {id:"car_11",name:"Dmitry Orlov",pos:"D",age:33,cap:3850000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:16,pts:20,gp:56},
+  {id:"car_12",name:"Pyotr Kochetkov",pos:"G",age:25,cap:4250000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:0,pts:0,gp:38},
+],
+CBJ:[
+  {id:"cbj_1",name:"Adam Fantilli",pos:"C",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:22,a:30,pts:52,gp:60},
+  {id:"cbj_2",name:"Kirill Marchenko",pos:"RW",age:24,cap:2750000,yrs:4,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:18,a:22,pts:40,gp:58},
+  {id:"cbj_3",name:"Kent Johnson",pos:"C",age:22,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:22,pts:36,gp:56},
+  {id:"cbj_4",name:"Sean Monahan",pos:"C",age:31,cap:5750000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:22,pts:36,gp:54},
+  {id:"cbj_5",name:"Conor Garland",pos:"RW",age:29,cap:4950000,yrs:2,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:16,a:22,pts:38,gp:54},
+  {id:"cbj_6",name:"Cole Sillinger",pos:"C",age:22,cap:4000000,yrs:4,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:16,a:22,pts:38,gp:60},
+  {id:"cbj_7",name:"Mason Marchment",pos:"LW",age:29,cap:3850000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:16,a:20,pts:36,gp:52},
+  {id:"cbj_8",name:"Boone Jenner",pos:"C",age:31,cap:6250000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:20,pts:36,gp:56},
+  {id:"cbj_9",name:"Zach Werenski",pos:"D",age:29,cap:5250000,yrs:4,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:10,a:28,pts:38,gp:58},
+  {id:"cbj_10",name:"Ivan Provorov",pos:"D",age:27,cap:6750000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:6,a:18,pts:24,gp:56},
+  {id:"cbj_11",name:"David Jiricek",pos:"D",age:22,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:3,a:10,pts:13,gp:44},
+  {id:"cbj_12",name:"Elvis Merzlikins",pos:"G",age:30,cap:5400000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:1,pts:1,gp:36},
+  {id:"cbj_13",name:"Ivan Fedotov",pos:"G",age:27,cap:2000000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:0,a:0,pts:0,gp:28},
+],
+NJD:[
+  {id:"njd_1",name:"Jack Hughes",pos:"C",age:23,cap:8250000,yrs:5,ntc:false,ntc_type:null,rtg:95,status:"NHL",g:34,a:56,pts:90,gp:60},
+  {id:"njd_2",name:"Dougie Hamilton",pos:"D",age:32,cap:9000000,yrs:3,ntc:true,ntc_type:"Full NTC",rtg:88,status:"NHL",g:12,a:40,pts:52,gp:58},
+  {id:"njd_3",name:"Jesper Bratt",pos:"LW",age:26,cap:7875000,yrs:5,ntc:false,ntc_type:null,rtg:86,status:"NHL",g:24,a:44,pts:68,gp:62},
+  {id:"njd_4",name:"Nico Hischier",pos:"C",age:26,cap:8700000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:88,status:"NHL",g:24,a:38,pts:62,gp:62},
+  {id:"njd_5",name:"Timo Meier",pos:"RW",age:28,cap:10000000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:87,status:"NHL",g:28,a:32,pts:60,gp:60},
+  {id:"njd_6",name:"Dawson Mercer",pos:"C",age:23,cap:3150000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:16,a:22,pts:38,gp:58},
+  {id:"njd_7",name:"Arseny Gritsyuk",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:12,pts:20,gp:46},
+  {id:"njd_8",name:"Lenni Hameenaho",pos:"RW",age:20,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:7,a:11,pts:18,gp:44},
+  {id:"njd_9",name:"Nick Bjugstad",pos:"C",age:32,cap:2000000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:8,a:12,pts:20,gp:50},
+  {id:"njd_10",name:"Jonas Siegenthaler",pos:"D",age:27,cap:3000000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:2,a:14,pts:16,gp:58},
+  {id:"njd_11",name:"Brett Pesce",pos:"D",age:30,cap:4025000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:5,a:18,pts:23,gp:56},
+  {id:"njd_12",name:"Simon Nemec",pos:"D",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:3,a:14,pts:17,gp:50},
+  {id:"njd_13",name:"Jacob Markstrom",pos:"G",age:35,cap:6000000,yrs:2,ntc:false,ntc_type:"Modified NTC",rtg:83,status:"NHL",g:0,a:1,pts:1,gp:36},
+  {id:"njd_14",name:"Jake Allen",pos:"G",age:35,cap:2350000,yrs:1,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:0,a:0,pts:0,gp:28},
+],
+NYI:[
+  {id:"nyi_1",name:"Mathew Barzal",pos:"C",age:27,cap:9150000,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:92,status:"NHL",g:24,a:48,pts:72,gp:62},
+  {id:"nyi_2",name:"Ilya Sorokin",pos:"G",age:29,cap:8000000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:92,status:"NHL",g:0,a:2,pts:2,gp:46},
+  {id:"nyi_3",name:"Bo Horvat",pos:"C",age:29,cap:8750000,yrs:6,ntc:false,ntc_type:null,rtg:86,status:"NHL",g:26,a:30,pts:56,gp:62},
+  {id:"nyi_4",name:"Brayden Schenn",pos:"C",age:33,cap:5000000,yrs:2,ntc:false,ntc_type:"Modified NTC",rtg:80,status:"NHL",g:14,a:20,pts:34,gp:52},
+  {id:"nyi_5",name:"Anders Lee",pos:"LW",age:34,cap:7000000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:78,status:"NHL",g:16,a:14,pts:30,gp:56},
+  {id:"nyi_6",name:"Jean-Gabriel Pageau",pos:"C",age:32,cap:5000000,yrs:4,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:14,a:18,pts:32,gp:58},
+  {id:"nyi_7",name:"Ondrej Palat",pos:"LW",age:33,cap:4000000,yrs:1,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:16,pts:26,gp:50},
+  {id:"nyi_8",name:"Calum Ritchie",pos:"C",age:20,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:16,pts:28,gp:52},
+  {id:"nyi_9",name:"Emil Heineman",pos:"LW",age:23,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:14,pts:24,gp:52},
+  {id:"nyi_10",name:"Adam Pelech",pos:"D",age:30,cap:5750000,yrs:4,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:4,a:14,pts:18,gp:60},
+  {id:"nyi_11",name:"Ryan Pulock",pos:"D",age:30,cap:5000000,yrs:4,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:5,a:16,pts:21,gp:56},
+  {id:"nyi_12",name:"Scott Mayfield",pos:"D",age:31,cap:4000000,yrs:2,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:2,a:12,pts:14,gp:56},
+],
+NYR:[
+  {id:"nyr_1",name:"Adam Fox",pos:"D",age:27,cap:9500000,yrs:7,ntc:false,ntc_type:"Modified NTC",rtg:95,status:"NHL",g:12,a:50,pts:62,gp:62},
+  {id:"nyr_2",name:"Igor Shesterkin",pos:"G",age:29,cap:11500000,yrs:8,ntc:true,ntc_type:"Full NTC",rtg:96,status:"NHL",g:0,a:2,pts:2,gp:48},
+  {id:"nyr_3",name:"Mika Zibanejad",pos:"C",age:32,cap:8500000,yrs:3,ntc:false,ntc_type:"Modified NTC",rtg:86,status:"NHL",g:22,a:38,pts:60,gp:60},
+  {id:"nyr_4",name:"Gabe Perreault",pos:"RW",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:22,pts:36,gp:58},
+  {id:"nyr_5",name:"Alexis Lafreniere",pos:"LW",age:23,cap:5000000,yrs:3,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:26,a:32,pts:58,gp:64},
+  {id:"nyr_6",name:"Vincent Trocheck",pos:"C",age:31,cap:7000000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:18,a:30,pts:48,gp:62},
+  {id:"nyr_7",name:"J.T. Miller",pos:"C",age:32,cap:8000000,yrs:3,ntc:false,ntc_type:null,rtg:85,status:"IR",g:18,a:30,pts:48,gp:46},
+  {id:"nyr_8",name:"Will Cuylle",pos:"LW",age:22,cap:862500,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:14,pts:26,gp:56},
+  {id:"nyr_9",name:"Noah Laba",pos:"C",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:69,status:"NHL",g:7,a:10,pts:17,gp:44},
+  {id:"nyr_10",name:"Vladislav Gavrikov",pos:"D",age:28,cap:7000000,yrs:7,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:4,a:20,pts:24,gp:56},
+  {id:"nyr_11",name:"Braden Schneider",pos:"D",age:23,cap:3025000,yrs:4,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:4,a:12,pts:16,gp:52},
+  {id:"nyr_12",name:"Will Borgen",pos:"D",age:27,cap:2250000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:2,a:8,pts:10,gp:48},
+],
+PHI:[
+  {id:"phi_1",name:"Matvei Michkov",pos:"RW",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:18,a:24,pts:42,gp:56},
+  {id:"phi_2",name:"Sean Couturier",pos:"C",age:33,cap:7750000,yrs:3,ntc:true,ntc_type:"Full NTC",rtg:86,status:"NHL",g:20,a:34,pts:54,gp:60},
+  {id:"phi_3",name:"Trevor Zegras",pos:"C",age:24,cap:5750000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:18,a:34,pts:52,gp:56},
+  {id:"phi_4",name:"Travis Konecny",pos:"RW",age:28,cap:8000000,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:85,status:"IR",g:28,a:34,pts:62,gp:54},
+  {id:"phi_5",name:"Owen Tippett",pos:"RW",age:25,cap:4400000,yrs:4,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:20,a:22,pts:42,gp:62},
+  {id:"phi_6",name:"Christian Dvorak",pos:"C",age:28,cap:4250000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:18,pts:30,gp:58},
+  {id:"phi_7",name:"Denver Barkey",pos:"C",age:20,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:8,a:12,pts:20,gp:44},
+  {id:"phi_8",name:"Travis Sanheim",pos:"D",age:28,cap:6250000,yrs:5,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:5,a:18,pts:23,gp:60},
+  {id:"phi_9",name:"Cam York",pos:"D",age:23,cap:3900000,yrs:5,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:5,a:18,pts:23,gp:56},
+  {id:"phi_10",name:"Jamie Drysdale",pos:"D",age:22,cap:3900000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:6,a:20,pts:26,gp:54},
+  {id:"phi_11",name:"Rasmus Ristolainen",pos:"D",age:30,cap:5100000,yrs:2,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:4,a:12,pts:16,gp:54},
+  {id:"phi_12",name:"David Jiricek",pos:"D",age:22,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:4,a:8,pts:12,gp:44},
+  {id:"phi_13",name:"Samuel Ersson",pos:"G",age:25,cap:800000,yrs:2,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:0,a:0,pts:0,gp:30},
+  {id:"phi_14",name:"Dan Vladar",pos:"G",age:27,cap:1600000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:0,pts:0,gp:36},
+],
+PIT:[
+  {id:"pit_1",name:"Sidney Crosby",pos:"C",age:38,cap:8700000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:91,status:"IR",g:22,a:40,pts:62,gp:54},
+  {id:"pit_2",name:"Erik Karlsson",pos:"D",age:35,cap:11500000,yrs:7,ntc:true,ntc_type:"Full NTC",rtg:78,status:"NHL",g:8,a:30,pts:38,gp:44},
+  {id:"pit_3",name:"Evgeni Malkin",pos:"C",age:38,cap:9500000,yrs:1,ntc:true,ntc_type:"Full NTC",rtg:87,status:"NHL",g:16,a:34,pts:50,gp:56},
+  {id:"pit_4",name:"Kris Letang",pos:"D",age:38,cap:6750000,yrs:1,ntc:true,ntc_type:"Full NTC",rtg:82,status:"NHL",g:6,a:24,pts:30,gp:52},
+  {id:"pit_5",name:"Rickard Rakell",pos:"C",age:32,cap:5000000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:22,pts:38,gp:58},
+  {id:"pit_6",name:"Stuart Skinner",pos:"G",age:26,cap:2600000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:0,a:1,pts:1,gp:36},
+  {id:"pit_7",name:"Egor Chinakhov",pos:"RW",age:23,cap:3300000,yrs:4,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:14,a:16,pts:30,gp:50},
+  {id:"pit_8",name:"Bryan Rust",pos:"RW",age:33,cap:3500000,yrs:1,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:16,pts:28,gp:52},
+  {id:"pit_9",name:"Tommy Novak",pos:"C",age:26,cap:2500000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:16,pts:26,gp:52},
+  {id:"pit_10",name:"Anthony Mantha",pos:"RW",age:30,cap:2500000,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:52},
+  {id:"pit_11",name:"Sam Girard",pos:"D",age:27,cap:5000000,yrs:2,ntc:false,ntc_type:null,rtg:79,status:"IR",g:0,a:0,pts:0,gp:0},
+  {id:"pit_12",name:"Arturs Silovs",pos:"G",age:23,cap:850000,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:0,a:0,pts:0,gp:22},
+],
+WSH:[
+  {id:"wsh_1",name:"Alex Ovechkin",pos:"LW",age:40,cap:9500000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:89,status:"NHL",g:30,a:18,pts:48,gp:58},
+  {id:"wsh_2",name:"Dylan Strome",pos:"C",age:27,cap:7350000,yrs:4,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:22,a:36,pts:58,gp:62},
+  {id:"wsh_3",name:"Tom Wilson",pos:"RW",age:31,cap:6500000,yrs:3,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:18,a:24,pts:42,gp:54},
+  {id:"wsh_4",name:"Pierre-Luc Dubois",pos:"C",age:26,cap:8500000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:16,a:28,pts:44,gp:56},
+  {id:"wsh_5",name:"Jakob Chychrun",pos:"D",age:26,cap:4600000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:8,a:22,pts:30,gp:56},
+  {id:"wsh_6",name:"Ryan Leonard",pos:"C",age:20,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:52},
+  {id:"wsh_7",name:"Connor McMichael",pos:"C",age:23,cap:1800000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:54},
+  {id:"wsh_8",name:"Aleksei Protas",pos:"C",age:23,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:16,pts:26,gp:54},
+  {id:"wsh_9",name:"Timothy Liljegren",pos:"D",age:25,cap:2500000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:12,pts:16,gp:48},
+  {id:"wsh_10",name:"Martin Fehervary",pos:"D",age:25,cap:2250000,yrs:4,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:3,a:12,pts:15,gp:54},
+  {id:"wsh_11",name:"Rasmus Sandin",pos:"D",age:25,cap:2450000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:4,a:14,pts:18,gp:52},
+  {id:"wsh_12",name:"Darcy Kuemper",pos:"G",age:35,cap:5250000,yrs:1,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:0,pts:0,gp:32},
+  {id:"wsh_13",name:"Charlie Lindgren",pos:"G",age:29,cap:3650000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:0,a:1,pts:1,gp:30},
+  {id:"wsh_14",name:"David Kampf",pos:"C",age:31,cap:1400000,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:4,a:6,pts:10,gp:46},
+  {id:"wsh_15",name:"Wyatt Bongiovanni",pos:"LW",age:25,cap:775000,yrs:1,ntc:false,ntc_type:null,rtg:63,status:"NHL",g:3,a:3,pts:6,gp:34},
+],
+CHI:[
+  {id:"chi_1",name:"Connor Bedard",pos:"C",age:19,cap:10400000,yrs:8,ntc:false,ntc_type:null,rtg:91,status:"NHL",g:36,a:48,pts:84,gp:64},
+  {id:"chi_2",name:"Seth Jones",pos:"D",age:30,cap:9500000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:82,status:"NHL",g:8,a:32,pts:40,gp:58},
+  {id:"chi_3",name:"Kevin Korchinski",pos:"D",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:4,a:16,pts:20,gp:50},
+  {id:"chi_4",name:"Andrew Mangiapane",pos:"LW",age:29,cap:3600000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:14,a:18,pts:32,gp:52},
+  {id:"chi_5",name:"Petr Mrazek",pos:"G",age:33,cap:2000000,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:0,a:0,pts:0,gp:32},
+  {id:"chi_6",name:"Arvid Soderblom",pos:"G",age:24,cap:825000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:0,a:0,pts:0,gp:30},
+],
+COL:[
+  {id:"col_1",name:"Nathan MacKinnon",pos:"C",age:30,cap:12600000,yrs:7,ntc:true,ntc_type:"Full NTC",rtg:99,status:"NHL",g:42,a:78,pts:120,gp:64},
+  {id:"col_2",name:"Cale Makar",pos:"D",age:26,cap:9000000,yrs:5,ntc:false,ntc_type:null,rtg:97,status:"NHL",g:20,a:60,pts:80,gp:62},
+  {id:"col_3",name:"Gabriel Landeskog",pos:"LW",age:29,cap:7000000,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:86,status:"NHL",g:22,a:30,pts:52,gp:54},
+  {id:"col_4",name:"Martin Necas",pos:"C",age:25,cap:7750000,yrs:6,ntc:false,ntc_type:null,rtg:87,status:"NHL",g:28,a:44,pts:72,gp:62},
+  {id:"col_5",name:"Valeri Nichushkin",pos:"RW",age:29,cap:6250000,yrs:4,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:22,a:26,pts:48,gp:54},
+  {id:"col_6",name:"Devon Toews",pos:"D",age:30,cap:7500000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:8,a:36,pts:44,gp:58},
+  {id:"col_7",name:"Brock Nelson",pos:"C",age:34,cap:6750000,yrs:2,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:20,a:24,pts:44,gp:60},
+  {id:"col_8",name:"Nazem Kadri",pos:"C",age:35,cap:7000000,yrs:1,ntc:false,ntc_type:"Modified NTC",rtg:82,status:"NHL",g:14,a:22,pts:36,gp:50},
+  {id:"col_9",name:"Nicolas Roy",pos:"C",age:27,cap:2900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:16,pts:26,gp:52},
+  {id:"col_10",name:"Ross Colton",pos:"C",age:26,cap:3000000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:14,a:14,pts:28,gp:56},
+  {id:"col_11",name:"Alexandar Georgiev",pos:"G",age:28,cap:5666667,yrs:2,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:0,a:1,pts:1,gp:40},
+],
+DAL:[
+  {id:"dal_1",name:"Jason Robertson",pos:"LW",age:25,cap:7750000,yrs:4,ntc:false,ntc_type:null,rtg:93,status:"NHL",g:36,a:48,pts:84,gp:66},
+  {id:"dal_2",name:"Miro Heiskanen",pos:"D",age:25,cap:8450000,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:94,status:"NHL",g:14,a:50,pts:64,gp:64},
+  {id:"dal_3",name:"Mikko Rantanen",pos:"RW",age:28,cap:9250000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:93,status:"NHL",g:34,a:46,pts:80,gp:62},
+  {id:"dal_4",name:"Jake Oettinger",pos:"G",age:26,cap:8250000,yrs:6,ntc:false,ntc_type:null,rtg:90,status:"NHL",g:0,a:2,pts:2,gp:50},
+  {id:"dal_5",name:"Wyatt Johnston",pos:"C",age:21,cap:3400000,yrs:3,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:20,a:28,pts:48,gp:62},
+  {id:"dal_6",name:"Mavrik Bourque",pos:"C",age:23,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:18,pts:30,gp:56},
+  {id:"dal_7",name:"Esa Lindell",pos:"D",age:31,cap:5800000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:4,a:18,pts:22,gp:58},
+  {id:"dal_8",name:"Matt Duchene",pos:"C",age:34,cap:5000000,yrs:1,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:22,pts:38,gp:54},
+  {id:"dal_9",name:"Michael Bunting",pos:"LW",age:30,cap:4000000,yrs:1,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:10,a:14,pts:24,gp:48},
+  {id:"dal_10",name:"Tyler Myers",pos:"D",age:35,cap:3000000,yrs:1,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:2,a:8,pts:10,gp:46},
+],
+EDM:[
+  {id:"edm_1",name:"Connor McDavid",pos:"C",age:28,cap:12500000,yrs:8,ntc:true,ntc_type:"Full NTC",rtg:99,status:"NHL",g:37,a:77,pts:114,gp:68},
+  {id:"edm_2",name:"Leon Draisaitl",pos:"C",age:29,cap:8500000,yrs:4,ntc:true,ntc_type:"Full NTC",rtg:97,status:"NHL",g:44,a:66,pts:110,gp:68},
+  {id:"edm_3",name:"Evan Bouchard",pos:"D",age:25,cap:10500000,yrs:4,ntc:false,ntc_type:null,rtg:88,status:"NHL",g:14,a:46,pts:60,gp:64},
+  {id:"edm_4",name:"Tristan Jarry",pos:"G",age:29,cap:5375000,yrs:2,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:0,a:1,pts:1,gp:36},
+  {id:"edm_5",name:"Zach Hyman",pos:"LW",age:32,cap:5500000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:28,a:26,pts:54,gp:62},
+  {id:"edm_6",name:"Ryan Nugent-Hopkins",pos:"C",age:32,cap:5125000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:16,a:34,pts:50,gp:60},
+  {id:"edm_7",name:"Darnell Nurse",pos:"D",age:30,cap:9250000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:6,a:24,pts:30,gp:58},
+  {id:"edm_8",name:"Mattias Ekholm",pos:"D",age:34,cap:6250000,yrs:2,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:4,a:24,pts:28,gp:58},
+  {id:"edm_9",name:"Vasily Podkolzin",pos:"LW",age:23,cap:2000000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:54},
+  {id:"edm_10",name:"Jack Roslovic",pos:"C",age:28,cap:4000000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:12,a:18,pts:30,gp:54},
+  {id:"edm_11",name:"Matthew Savoie",pos:"C",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:10,a:14,pts:24,gp:50},
+  {id:"edm_12",name:"Connor Murphy",pos:"D",age:31,cap:3850000,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:2,a:8,pts:10,gp:44},
+  {id:"edm_13",name:"Connor Ingram",pos:"G",age:27,cap:1900000,yrs:1,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:0,a:0,pts:0,gp:28},
+],
+MIN:[
+  {id:"min_1",name:"Kirill Kaprizov",pos:"LW",age:27,cap:9000000,yrs:6,ntc:true,ntc_type:"Full NTC",rtg:96,status:"NHL",g:40,a:54,pts:94,gp:64},
+  {id:"min_2",name:"Quinn Hughes",pos:"D",age:25,cap:7850000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:93,status:"NHL",g:12,a:50,pts:62,gp:56},
+  {id:"min_3",name:"Brock Faber",pos:"D",age:22,cap:7500000,yrs:7,ntc:false,ntc_type:null,rtg:86,status:"NHL",g:6,a:30,pts:36,gp:62},
+  {id:"min_4",name:"Matt Boldy",pos:"LW",age:23,cap:7500000,yrs:7,ntc:false,ntc_type:null,rtg:87,status:"NHL",g:28,a:34,pts:62,gp:62},
+  {id:"min_5",name:"Joel Eriksson Ek",pos:"C",age:28,cap:5250000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:18,a:26,pts:44,gp:60},
+  {id:"min_6",name:"Filip Gustavsson",pos:"G",age:26,cap:3750000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:1,pts:1,gp:42},
+  {id:"min_7",name:"Bobby Brink",pos:"RW",age:24,cap:1600000,yrs:2,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:14,pts:24,gp:46},
+  {id:"min_8",name:"Nick Foligno",pos:"LW",age:37,cap:875000,yrs:1,ntc:false,ntc_type:null,rtg:64,status:"NHL",g:4,a:6,pts:10,gp:42},
+],
+NSH:[
+  {id:"nsh_1",name:"Roman Josi",pos:"D",age:35,cap:9059000,yrs:3,ntc:true,ntc_type:"Full NTC",rtg:92,status:"NHL",g:10,a:44,pts:54,gp:60},
+  {id:"nsh_2",name:"Filip Forsberg",pos:"LW",age:30,cap:8500000,yrs:6,ntc:true,ntc_type:"Full NTC",rtg:90,status:"NHL",g:30,a:40,pts:70,gp:58},
+  {id:"nsh_3",name:"Juuse Saros",pos:"G",age:29,cap:5000000,yrs:2,ntc:false,ntc_type:"Modified NTC",rtg:90,status:"NHL",g:0,a:2,pts:2,gp:44},
+  {id:"nsh_4",name:"Steven Stamkos",pos:"C",age:35,cap:8000000,yrs:2,ntc:false,ntc_type:"Modified NTC",rtg:83,status:"NHL",g:22,a:30,pts:52,gp:58},
+  {id:"nsh_5",name:"Jonathan Marchessault",pos:"RW",age:34,cap:8000000,yrs:2,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:20,a:28,pts:48,gp:58},
+  {id:"nsh_6",name:"Ryan O'Reilly",pos:"C",age:34,cap:7500000,yrs:3,ntc:true,ntc_type:"Full NTC",rtg:85,status:"NHL",g:18,a:32,pts:50,gp:58},
+  {id:"nsh_7",name:"Luke Evangelista",pos:"RW",age:23,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:16,pts:28,gp:52},
+  {id:"nsh_8",name:"Matthew Wood",pos:"RW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:12,pts:22,gp:46},
+  {id:"nsh_9",name:"Brady Skjei",pos:"D",age:31,cap:5250000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:6,a:20,pts:26,gp:58},
+  {id:"nsh_10",name:"Erik Haula",pos:"C",age:34,cap:1750000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:12,pts:20,gp:52},
+],
+STL:[
+  {id:"stl_1",name:"Robert Thomas",pos:"C",age:25,cap:8125000,yrs:6,ntc:false,ntc_type:null,rtg:87,status:"NHL",g:24,a:46,pts:70,gp:62},
+  {id:"stl_2",name:"Jordan Binnington",pos:"G",age:32,cap:6000000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:83,status:"NHL",g:0,a:1,pts:1,gp:40},
+  {id:"stl_3",name:"Pavel Buchnevich",pos:"RW",age:29,cap:5500000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:20,a:30,pts:50,gp:56},
+  {id:"stl_4",name:"Jordan Kyrou",pos:"RW",age:26,cap:8000000,yrs:6,ntc:false,ntc_type:null,rtg:85,status:"NHL",g:26,a:32,pts:58,gp:60},
+  {id:"stl_5",name:"Dylan Holloway",pos:"LW",age:23,cap:4500000,yrs:4,ntc:false,ntc_type:null,rtg:81,status:"NHL",g:20,a:26,pts:46,gp:52},
+  {id:"stl_6",name:"Jimmy Snuggerud",pos:"RW",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:14,a:18,pts:32,gp:54},
+  {id:"stl_7",name:"Jake Neighbours",pos:"LW",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:12,a:14,pts:26,gp:52},
+  {id:"stl_8",name:"Dalibor Dvorsky",pos:"C",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:14,pts:24,gp:48},
+  {id:"stl_9",name:"Colton Parayko",pos:"D",age:31,cap:5500000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:4,a:14,pts:18,gp:52},
+  {id:"stl_10",name:"Philip Broberg",pos:"D",age:23,cap:2000000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:5,a:16,pts:21,gp:52},
+  {id:"stl_11",name:"Joel Hofer",pos:"G",age:24,cap:2000000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:0,a:0,pts:0,gp:24},
+  {id:"stl_12",name:"Justin Holl",pos:"D",age:32,cap:2100000,yrs:2,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:2,a:8,pts:10,gp:46},
+  {id:"stl_13",name:"Jonathan Drouin",pos:"LW",age:30,cap:2500000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:8,a:12,pts:20,gp:46},
+],
+UTA:[
+  {id:"uta_1",name:"Clayton Keller",pos:"C",age:27,cap:7150000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:88,status:"NHL",g:26,a:42,pts:68,gp:60},
+  {id:"uta_2",name:"MacKenzie Weegar",pos:"D",age:30,cap:6250000,yrs:4,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:8,a:26,pts:34,gp:52},
+  {id:"uta_3",name:"JJ Peterka",pos:"RW",age:23,cap:5250000,yrs:5,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:26,a:30,pts:56,gp:60},
+  {id:"uta_4",name:"Nick Schmaltz",pos:"C",age:29,cap:5850000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:18,a:28,pts:46,gp:56},
+  {id:"uta_5",name:"Lawson Crouse",pos:"LW",age:28,cap:4000000,yrs:4,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:14,pts:30,gp:58},
+  {id:"uta_6",name:"Karel Vejmelka",pos:"G",age:28,cap:2750000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:0,a:0,pts:0,gp:32},
+  {id:"uta_7",name:"Barrett Hayton",pos:"C",age:24,cap:1800000,yrs:3,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:14,pts:24,gp:54},
+  {id:"uta_8",name:"Tij Iginla",pos:"LW",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:77,status:"AHL",g:0,a:0,pts:0,gp:0},
+],
+VAN:[
+  {id:"van_1",name:"Elias Pettersson",pos:"C",age:26,cap:11600000,yrs:7,ntc:true,ntc_type:"Full NTC",rtg:95,status:"NHL",g:30,a:52,pts:82,gp:60},
+  {id:"van_2",name:"Brock Boeser",pos:"RW",age:28,cap:7300000,yrs:7,ntc:false,ntc_type:"Modified NTC",rtg:86,status:"NHL",g:28,a:34,pts:62,gp:62},
+  {id:"van_3",name:"Filip Hronek",pos:"D",age:27,cap:6750000,yrs:5,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:8,a:28,pts:36,gp:56},
+  {id:"van_4",name:"Thatcher Demko",pos:"G",age:29,cap:9000000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:91,status:"IR",g:0,a:0,pts:0,gp:0},
+  {id:"van_5",name:"Andrei Kuzmenko",pos:"LW",age:27,cap:5500000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:20,a:24,pts:44,gp:56},
+  {id:"van_6",name:"Marco Rossi",pos:"C",age:23,cap:1500000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:10,a:16,pts:26,gp:48},
+  {id:"van_7",name:"Liam Ohgren",pos:"LW",age:22,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:7,a:10,pts:17,gp:42},
+  {id:"van_8",name:"Tom Willander",pos:"D",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:3,a:12,pts:15,gp:46},
+  {id:"van_9",name:"Evander Kane",pos:"LW",age:34,cap:5000000,yrs:2,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:14,a:12,pts:26,gp:48},
+  {id:"van_10",name:"Kevin Lankinen",pos:"G",age:30,cap:1750000,yrs:1,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:0,a:0,pts:0,gp:32},
+  {id:"van_11",name:"Filip Chytil",pos:"C",age:25,cap:5000000,yrs:4,ntc:false,ntc_type:null,rtg:77,status:"IR",g:0,a:0,pts:0,gp:0},
+],
+VGK:[
+  {id:"vgk_1",name:"Jack Eichel",pos:"C",age:29,cap:10000000,yrs:3,ntc:false,ntc_type:"Modified NTC",rtg:93,status:"NHL",g:28,a:48,pts:76,gp:60},
+  {id:"vgk_2",name:"Mitch Marner",pos:"RW",age:28,cap:12000000,yrs:8,ntc:true,ntc_type:"Full NTC",rtg:94,status:"NHL",g:24,a:50,pts:74,gp:56},
+  {id:"vgk_3",name:"Adin Hill",pos:"G",age:28,cap:4900000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:0,a:1,pts:1,gp:38},
+  {id:"vgk_4",name:"Shea Theodore",pos:"D",age:30,cap:5200000,yrs:3,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:8,a:32,pts:40,gp:58},
+  {id:"vgk_5",name:"Rasmus Andersson",pos:"D",age:28,cap:2275000,yrs:2,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:4,a:14,pts:18,gp:50},
+  {id:"vgk_6",name:"Tomas Hertl",pos:"C",age:31,cap:8000000,yrs:4,ntc:false,ntc_type:"Modified NTC",rtg:83,status:"NHL",g:18,a:26,pts:44,gp:56},
+  {id:"vgk_7",name:"Ivan Barbashev",pos:"C",age:28,cap:4850000,yrs:4,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:20,pts:34,gp:56},
+  {id:"vgk_8",name:"Noah Hanifin",pos:"D",age:28,cap:5100000,yrs:1,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:5,a:18,pts:23,gp:52},
+  {id:"vgk_9",name:"Nic Dowd",pos:"C",age:35,cap:1750000,yrs:1,ntc:false,ntc_type:null,rtg:65,status:"NHL",g:3,a:5,pts:8,gp:44},
+],
+WPG:[
+  {id:"wpg_1",name:"Mark Scheifele",pos:"C",age:32,cap:8500000,yrs:4,ntc:true,ntc_type:"Full NTC",rtg:88,status:"NHL",g:28,a:38,pts:66,gp:60},
+  {id:"wpg_2",name:"Connor Hellebuyck",pos:"G",age:32,cap:8500000,yrs:5,ntc:false,ntc_type:"Modified NTC",rtg:96,status:"NHL",g:0,a:3,pts:3,gp:50},
+  {id:"wpg_3",name:"Josh Morrissey",pos:"D",age:30,cap:9250000,yrs:7,ntc:false,ntc_type:"Modified NTC",rtg:91,status:"NHL",g:12,a:44,pts:56,gp:62},
+  {id:"wpg_4",name:"Kyle Connor",pos:"LW",age:28,cap:7142858,yrs:6,ntc:false,ntc_type:"Modified NTC",rtg:87,status:"NHL",g:28,a:36,pts:64,gp:62},
+  {id:"wpg_5",name:"Gabriel Vilardi",pos:"C",age:24,cap:6750000,yrs:6,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:20,a:24,pts:44,gp:56},
+  {id:"wpg_6",name:"Cole Perfetti",pos:"LW",age:22,cap:3000000,yrs:3,ntc:false,ntc_type:null,rtg:81,status:"NHL",g:18,a:28,pts:46,gp:58},
+  {id:"wpg_7",name:"Jonathan Toews",pos:"C",age:37,cap:1000000,yrs:1,ntc:false,ntc_type:null,rtg:68,status:"NHL",g:6,a:10,pts:16,gp:46},
+  {id:"wpg_8",name:"Isak Rosen",pos:"RW",age:22,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:5,a:7,pts:12,gp:38},
+  {id:"wpg_9",name:"Alex Iafallo",pos:"LW",age:31,cap:3750000,yrs:2,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:10,a:16,pts:26,gp:54},
+],
+ANA:[
+  {id:"ana_1",name:"Leo Carlsson",pos:"C",age:20,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:14,a:22,pts:36,gp:54},
+  {id:"ana_2",name:"Cutter Gauthier",pos:"C",age:22,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:16,a:22,pts:38,gp:56},
+  {id:"ana_3",name:"Mason McTavish",pos:"C",age:21,cap:3750000,yrs:3,ntc:false,ntc_type:null,rtg:83,status:"NHL",g:20,a:26,pts:46,gp:58},
+  {id:"ana_4",name:"Troy Terry",pos:"RW",age:26,cap:5150000,yrs:3,ntc:false,ntc_type:null,rtg:82,status:"IR",g:22,a:30,pts:52,gp:54},
+  {id:"ana_5",name:"Chris Kreider",pos:"LW",age:34,cap:6500000,yrs:2,ntc:false,ntc_type:"Modified NTC",rtg:80,status:"NHL",g:18,a:18,pts:36,gp:54},
+  {id:"ana_6",name:"Beckett Sennecke",pos:"RW",age:19,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:10,a:14,pts:24,gp:48},
+  {id:"ana_7",name:"John Carlson",pos:"D",age:36,cap:7500000,yrs:1,ntc:false,ntc_type:"Modified NTC",rtg:76,status:"NHL",g:4,a:18,pts:22,gp:46},
+  {id:"ana_8",name:"Olen Zellweger",pos:"D",age:21,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:4,a:14,pts:18,gp:48},
+  {id:"ana_9",name:"Jackson LaCombe",pos:"D",age:23,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:4,a:12,pts:16,gp:50},
+  {id:"ana_10",name:"Lukas Dostal",pos:"G",age:24,cap:2250000,yrs:5,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:0,a:1,pts:1,gp:38},
+  {id:"ana_11",name:"Mikael Granlund",pos:"C",age:33,cap:3750000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:22,pts:34,gp:56},
+],
+CGY:[
+  {id:"cgy_1",name:"Jonathan Huberdeau",pos:"LW",age:31,cap:10500000,yrs:6,ntc:true,ntc_type:"Full NTC",rtg:83,status:"NHL",g:18,a:38,pts:56,gp:58},
+  {id:"cgy_2",name:"Blake Coleman",pos:"LW",age:33,cap:4350000,yrs:2,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:12,a:14,pts:26,gp:52},
+  {id:"cgy_3",name:"Dustin Wolf",pos:"G",age:24,cap:1100000,yrs:3,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:0,a:0,pts:0,gp:38},
+  {id:"cgy_4",name:"Yegor Sharangovich",pos:"LW",age:26,cap:3300000,yrs:4,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:14,a:16,pts:30,gp:56},
+  {id:"cgy_5",name:"Ryan Strome",pos:"C",age:32,cap:5000000,yrs:2,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:16,pts:26,gp:46},
+  {id:"cgy_6",name:"Zach Whitecloud",pos:"D",age:28,cap:2250000,yrs:3,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:2,a:6,pts:8,gp:46},
+  {id:"cgy_7",name:"Victor Olofsson",pos:"LW",age:28,cap:3500000,yrs:2,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:14,pts:24,gp:46},
+  {id:"cgy_8",name:"Noah Hanifin",pos:"D",age:28,cap:5100000,yrs:1,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:4,a:18,pts:22,gp:56},
+  {id:"cgy_9",name:"Brennan Othmann",pos:"LW",age:22,cap:900000,yrs:2,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:6,a:10,pts:16,gp:42},
+  {id:"cgy_10",name:"Joel Farabee",pos:"LW",age:25,cap:5000000,yrs:5,ntc:false,ntc_type:null,rtg:77,status:"NHL",g:14,a:18,pts:32,gp:54},
+],
+LAK:[
+  {id:"lak_1",name:"Artemi Panarin",pos:"LW",age:33,cap:5821429,yrs:4,ntc:true,ntc_type:"Full NTC",rtg:94,status:"NHL",g:18,a:34,pts:52,gp:38},
+  {id:"lak_2",name:"Anze Kopitar",pos:"C",age:38,cap:10000000,yrs:2,ntc:true,ntc_type:"Full NTC",rtg:86,status:"NHL",g:14,a:36,pts:50,gp:58},
+  {id:"lak_3",name:"Quinton Byfield",pos:"C",age:22,cap:8500000,yrs:8,ntc:false,ntc_type:"Modified NTC",rtg:88,status:"NHL",g:24,a:38,pts:62,gp:60},
+  {id:"lak_4",name:"Drew Doughty",pos:"D",age:35,cap:11000000,yrs:1,ntc:true,ntc_type:"Full NTC",rtg:79,status:"NHL",g:6,a:26,pts:32,gp:56},
+  {id:"lak_5",name:"Kevin Fiala",pos:"LW",age:28,cap:7500000,yrs:4,ntc:false,ntc_type:null,rtg:85,status:"NHL",g:22,a:34,pts:56,gp:60},
+  {id:"lak_6",name:"Adrian Kempe",pos:"LW",age:27,cap:5500000,yrs:4,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:26,a:30,pts:56,gp:62},
+  {id:"lak_7",name:"Scott Laughton",pos:"C",age:31,cap:3000000,yrs:1,ntc:false,ntc_type:null,rtg:73,status:"NHL",g:8,a:10,pts:18,gp:46},
+  {id:"lak_8",name:"Cal Petersen",pos:"G",age:31,cap:5000000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:0,a:0,pts:0,gp:30},
+],
+SJS:[
+  {id:"sjs_1",name:"Macklin Celebrini",pos:"C",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:35,a:60,pts:95,gp:65},
+  {id:"sjs_2",name:"Will Smith",pos:"C",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:20,a:28,pts:48,gp:60},
+  {id:"sjs_3",name:"William Eklund",pos:"LW",age:22,cap:3000000,yrs:3,ntc:false,ntc_type:null,rtg:79,status:"NHL",g:16,a:26,pts:42,gp:58},
+  {id:"sjs_4",name:"Michael Misa",pos:"C",age:19,cap:925000,yrs:3,ntc:false,ntc_type:null,rtg:78,status:"NHL",g:14,a:22,pts:36,gp:54},
+  {id:"sjs_5",name:"Tyler Toffoli",pos:"RW",age:33,cap:3250000,yrs:2,ntc:false,ntc_type:null,rtg:76,status:"NHL",g:14,a:18,pts:32,gp:54},
+  {id:"sjs_6",name:"Kiefer Sherwood",pos:"RW",age:28,cap:1600000,yrs:1,ntc:false,ntc_type:null,rtg:70,status:"NHL",g:12,a:12,pts:24,gp:48},
+  {id:"sjs_7",name:"Mackenzie Blackwood",pos:"G",age:28,cap:4200000,yrs:4,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:0,a:0,pts:0,gp:34},
+  {id:"sjs_8",name:"Alex Nedeljkovic",pos:"G",age:29,cap:2000000,yrs:1,ntc:false,ntc_type:null,rtg:72,status:"NHL",g:0,a:0,pts:0,gp:30},
+],
+SEA:[
+  {id:"sea_1",name:"Matty Beniers",pos:"C",age:22,cap:7200000,yrs:6,ntc:false,ntc_type:null,rtg:84,status:"NHL",g:22,a:32,pts:54,gp:62},
+  {id:"sea_2",name:"Joey Daccord",pos:"G",age:27,cap:3900000,yrs:5,ntc:false,ntc_type:null,rtg:85,status:"NHL",g:0,a:1,pts:1,gp:44},
+  {id:"sea_3",name:"Vince Dunn",pos:"D",age:27,cap:5500000,yrs:4,ntc:false,ntc_type:null,rtg:82,status:"NHL",g:10,a:30,pts:40,gp:58},
+  {id:"sea_4",name:"Jaden McCann",pos:"C",age:27,cap:5000000,yrs:4,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:18,a:22,pts:40,gp:58},
+  {id:"sea_5",name:"Chandler Stephenson",pos:"C",age:30,cap:6500000,yrs:1,ntc:false,ntc_type:null,rtg:80,status:"NHL",g:14,a:22,pts:36,gp:54},
+  {id:"sea_6",name:"Bobby McMann",pos:"LW",age:28,cap:1200000,yrs:1,ntc:false,ntc_type:null,rtg:71,status:"NHL",g:10,a:8,pts:18,gp:44},
+  {id:"sea_7",name:"Berkly Catton",pos:"C",age:19,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:75,status:"NHL",g:10,a:14,pts:24,gp:48},
+  {id:"sea_8",name:"Shane Wright",pos:"C",age:21,cap:900000,yrs:3,ntc:false,ntc_type:null,rtg:74,status:"NHL",g:8,a:12,pts:20,gp:46},
+],
+};
+
+// ──────────────────────────────────────────────────────────────
+//  STARTUP
+// ──────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Skip live loading — rosters are hardcoded from NHL.com projected lineups
+  $('loading-overlay').classList.add('hidden');
+  checkForSave();
+});
+
+function checkForSave() {
+  const save = localStorage.getItem('gm-mode-save');
+  $('intro').classList.remove('hidden');
+  if (save) {
+    try {
+      const d = JSON.parse(save);
+      $('saves-list').innerHTML = `
+        <div class="detail-row" style="cursor:pointer" onclick="loadSave()">
+          <span>${d.team ? TEAMS[d.team]?.name || d.team : 'Unknown'}</span>
+          <span class="text-dim">GM: ${d.gm}</span>
+        </div>`;
+    } catch(e) {}
+  } else {
+    $('saves-list').innerHTML = '<div class="text-muted" style="font-size:11px;padding:8px 0">No saved games found.</div>';
+  }
+}
+
+function switchIntroTab(tab) {
+  ['solo','league','load'].forEach(t => {
+    $('tab-'+t).classList.toggle('active', t === tab);
+    $('pane-'+t).classList.toggle('hidden', t !== tab);
+  });
+}
+
+function startSolo() {
+  const name = $('inp-name').value.trim();
+  if (!name) { toast('Enter your GM name', 'error'); return; }
+  GS.gm = name; GS.mode = 'solo';
+  $('intro').classList.add('hidden');
+  showTeamSelect();
+}
+
+function startLeague() {
+  const name = $('inp-lg-name').value.trim();
+  const league = $('inp-lg-league').value.trim();
+  if (!name || !league) { toast('Fill in all fields', 'error'); return; }
+  GS.gm = name; GS.mode = 'league'; GS.league = league;
+  GS.leagueCode = Math.random().toString(36).slice(2,8).toUpperCase();
+  $('intro').classList.add('hidden');
+  showTeamSelect();
+}
+
+function loadSave() {
+  try {
+    const d = JSON.parse(localStorage.getItem('gm-mode-save'));
+    Object.assign(GS, d);
+    $('intro').classList.add('hidden');
+    pickTeam(GS.team, true);
+  } catch(e) { toast('Failed to load save', 'error'); }
+}
+
+function deleteSave() {
+  localStorage.removeItem('gm-mode-save');
+  $('saves-list').innerHTML = '<div class="text-muted" style="font-size:11px;padding:8px 0">No saved games found.</div>';
+  toast('Save deleted');
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem('gm-mode-save', JSON.stringify(GS));
+    toast('Game saved ✓', 'success');
+  } catch(e) { toast('Save failed', 'error'); }
+}
+
+// ──────────────────────────────────────────────────────────────
+//  TEAM SELECT
+// ──────────────────────────────────────────────────────────────
+function showTeamSelect() {
+  $('team-select').classList.remove('hidden');
+  buildTeamGrid('all');
+}
+
+function confFilter(conf, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildTeamGrid(conf);
+}
+
+function buildTeamGrid(conf) {
+  const divGroups = {
+    East: [
+      ['Atlantic',     ['BOS','BUF','DET','FLA','MTL','OTT','TBL','TOR']],
+      ['Metropolitan', ['CAR','CBJ','NJD','NYI','NYR','PHI','PIT','WSH']],
+    ],
+    West: [
+      ['Central', ['CHI','COL','DAL','MIN','NSH','STL','UTA','WPG']],
+      ['Pacific', ['ANA','CGY','EDM','LAK','SJS','SEA','VAN','VGK']],
+    ],
+  };
+  let groups = conf === 'East' ? divGroups.East :
+               conf === 'West' ? divGroups.West :
+               [...divGroups.East, ...divGroups.West];
+
+  $('ts-body').innerHTML = groups.map(([div, teams]) => `
+    <div class="div-label">${div} Division</div>
+    <div class="team-grid mb16">
+      ${teams.map(abbr => {
+        const t = TEAMS[abbr]; if (!t) return '';
+        const used  = capUsed(abbr);
+        const space = CAP - used;
+        const pct   = used / CAP;
+        const cls   = pct > 0.95 ? 'cap-tight' : pct > 0.85 ? 'cap-warn' : 'cap-ok';
+        const spaceTxt = (space >= 0 ? '+' : '') + fmt$(space);
+        const roster = ROSTERS[abbr] || [];
+        const nhlPlayers = roster.filter(p => p.status === 'NHL').length;
+        return `<div class="team-tile" onclick="pickTeam('${abbr}')">
+          <div class="t-logo" style="background:${t.c1};color:${t.c2}">${abbr}</div>
+          <div style="flex:1;min-width:0">
+            <div class="t-name">${t.name}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">${nhlPlayers} NHL players</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">OVR ${t.ovr}</span>
+            <span class="t-cap ${cls}">${spaceTxt}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function pickTeam(abbr, fromSave) {
+  const t = TEAMS[abbr];
+  if (!t) { toast('Team not found', 'error'); return; }
+  GS.team = abbr;
+  $('team-select').classList.add('hidden');
+
+  // Setup top bar
+  $('tb-logo').textContent = abbr;
+  $('tb-logo').style.background = t.c1;
+  $('tb-logo').style.color = t.c2;
+  $('tb-name').textContent = t.name;
+  $('tb-gm').textContent   = `GM: ${GS.gm}`;
+
+  $('app').classList.add('visible');
+  updateCap();
+  go('dashboard');
+
+  if (!fromSave) {
+    addNews('HIRED', 'tag-sign', `${GS.gm} named General Manager of the ${t.name}.`);
+    GS.simPhase='preseason'; GS.week=1; GS.schedule=[]; GS.results=[]; GS.injuries=[];
+    initStandings(); generateSchedule();
+  }
+}
+
+function switchTeam() {
+  $('app').classList.remove('visible');
+  showTeamSelect();
+}
+
+function updateCap() {
+  const abbr = GS.team;
+  const used = capUsed(abbr);
+  const space = CAP - used;
+  const pct = used / CAP;
+  const cls = pct > 0.97 ? 'cap-over' : pct > 0.9 ? 'cap-low' : 'cap-good';
+  $('tb-cap').innerHTML = `<span class="${cls}">${fmt$(used)} / ${fmt$(CAP)}</span> <span class="text-muted">(${fmt$(space)} space)</span>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+//  NAVIGATION
+// ──────────────────────────────────────────────────────────────
+let currentView = 'dashboard';
+
+function go(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const el = $('view-' + view);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') === `go('${view}')`) b.classList.add('active');
+  });
+  currentView = view;
+  const renders = {
+    dashboard: renderDash, roster: renderRoster, ahl: renderAHL,
+    trades: renderTrades, waivers: renderWaivers, fa: renderFA,
+    contracts: renderContracts, standings: renderStandings, draft: renderDraft, sim: renderSim,
+  };
+  if (renders[view]) renders[view]();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  DASHBOARD
+// ──────────────────────────────────────────────────────────────
+function renderDash() {
+  const abbr   = GS.team;
+  const t      = TEAMS[abbr];
+  const roster = (ROSTERS[abbr] || []).filter(p => p.status === 'NHL');
+  const used   = capUsed(abbr);
+  const space  = CAP - used;
+  const pct    = Math.min(100, Math.round(used / CAP * 100));
+  const capCls = pct > 97 ? 'var(--red)' : pct > 90 ? 'var(--gold)' : 'var(--green)';
+
+  const forwards  = roster.filter(p => ['LW','RW','C','F'].includes(p.pos));
+  const defense   = roster.filter(p => p.pos === 'D');
+  const goalies   = roster.filter(p => p.pos === 'G');
+
+  // Top scorer
+  const top = [...roster].sort((a,b) => (b.pts||0) - (a.pts||0))[0];
+  // Top earner
+  const earner = [...roster].sort((a,b) => (b.cap||0) - (a.cap||0))[0];
+
+  const html = `
+    <div class="view-title">WAR ROOM — ${t.name.toUpperCase()}</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">CAP USED</div>
+        <div class="stat-val" style="color:${capCls};font-size:18px">${fmt$(used)}</div>
+        <div class="cap-bar"><div class="cap-fill" style="width:${pct}%;background:${capCls}"></div></div>
+        <div class="stat-sub">${fmt$(space)} available (${100-pct}%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ROSTER</div>
+        <div class="stat-val">${roster.length}</div>
+        <div class="stat-sub">${forwards.length}F / ${defense.length}D / ${goalies.length}G</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TOP SCORER</div>
+        <div class="stat-val" style="font-size:14px">${top?.name.split(' ').pop() || '—'}</div>
+        <div class="stat-sub">${top ? `${top.pts} PTS (${top.g}G ${top.a}A) in ${top.gp}GP` : 'Loading...'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">HIGHEST PAID</div>
+        <div class="stat-val" style="font-size:14px">${earner?.name.split(' ').pop() || '—'}</div>
+        <div class="stat-sub">${earner ? fmt$(earner.cap) + '/yr' : 'Loading...'}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="panel">
+        <div class="panel-title">DEPTH CHART</div>
+        <div class="panel-body" style="padding:8px 0">
+          ${[...forwards.slice(0,9), ...defense.slice(0,6), ...goalies.slice(0,2)].map(p => `
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 14px;border-bottom:1px solid var(--border)">
+              <span class="mono text-muted" style="font-size:9px;width:18px">${p.pos}</span>
+              <span style="flex:1;font-size:11px">${p.name}</span>
+              <span class="rtg badge ${rtgClass(p.rtg||75)}">${p.rtg||75}</span>
+              ${p.cap > 0 ? `<span class="mono text-muted" style="font-size:9px">${fmt$(p.cap)}</span>` : ''}
+              ${p.status === 'IR' ? `<span class="badge badge-ir">IR</span>` : ''}
+            </div>`).join('') || '<div class="text-muted" style="padding:14px;font-size:11px">Loading roster...</div>'}
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">RECENT NEWS <button class="btn btn-outline" style="font-size:9px;padding:2px 8px" onclick="triggerEvent()">+ Event</button></div>
+          <div class="panel-body">
+            ${GS.news.length ? GS.news.slice(0,8).map(n => `
+              <div class="news-item">
+                <div class="news-tag ${n.cls}">${n.tag}</div>
+                <div class="news-text">${n.text}</div>
+              </div>`).join('') : '<div class="text-muted" style="font-size:11px">No news yet.</div>'}
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">IR / INJURIES</div>
+          <div class="panel-body" style="padding:6px 0">
+            ${(ROSTERS[abbr]||[]).filter(p=>p.status==='IR'||p.status==='LTIR').map(p=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 14px">
+                <span style="flex:1;font-size:11px">${p.name}</span>
+                <span class="badge ${p.status==='LTIR'?'badge-ir':'badge-ir'}">${p.status}</span>
+              </div>`).join('') || '<div class="text-muted" style="padding:8px 14px;font-size:11px">No injured players.</div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  $('view-dashboard').innerHTML = html;
+}
+
+// ──────────────────────────────────────────────────────────────
+//  ROSTER VIEW
+// ──────────────────────────────────────────────────────────────
+let rosterTab = 'nhl';
+
+function renderRoster() {
+  const abbr   = GS.team;
+  const roster = ROSTERS[abbr] || [];
+
+  const tabs = [
+    { id:'nhl',  label:'NHL Roster', filter: p => p.status === 'NHL' },
+    { id:'contracts', label:'Contracts', filter: p => p.status === 'NHL' || p.status === 'IR' },
+    { id:'ir',   label:'IR / LTIR', filter: p => p.status === 'IR' || p.status === 'LTIR' },
+  ];
+
+  const activeTab = tabs.find(t => t.id === rosterTab) || tabs[0];
+  const players   = roster.filter(activeTab.filter);
+
+  const posOrder = { G:5, D:4, RD:4, LD:4, C:3, LW:2, RW:1, F:2 };
+  players.sort((a,b) => (posOrder[b.pos]||0) - (posOrder[a.pos]||0) || (b.pts||0) - (a.pts||0));
+
+  const tableHtml = rosterTab === 'contracts' ? `
+    <table class="tbl">
+      <thead><tr>
+        <th>PLAYER</th><th>POS</th><th>AGE</th>
+        <th>CAP HIT</th><th>YRS</th><th>NTC</th><th>STATUS</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${players.map(p => `
+          <tr>
+            <td><span class="player-name-link" onclick="showPlayerModal('${p.id}','${abbr}')">${p.name}</span></td>
+            <td class="mono text-muted">${p.pos}</td>
+            <td class="mono">${p.age}</td>
+            <td class="mono">${p.cap > 0 ? fmt$(p.cap) : '<span class="text-muted">—</span>'}</td>
+            <td class="mono">${p.yrs > 0 ? p.yrs+'yr' : '<span class="text-muted">RFA</span>'}</td>
+            <td>${p.ntc ? `<span class="badge badge-ntc">${p.ntc_type || 'NTC'}</span>` : ''}</td>
+            <td>${p.status === 'IR' ? '<span class="badge badge-ir">IR</span>' : ''}</td>
+            <td><button class="btn btn-outline" style="font-size:9px;padding:2px 8px" onclick="showPlayerModal('${p.id}','${abbr}')">⋯</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>` : `
+    <table class="tbl">
+      <thead><tr>
+        <th>PLAYER</th><th>POS</th><th>AGE</th><th>RTG</th>
+        <th>GP</th><th>G</th><th>A</th><th>PTS</th><th>CAP HIT</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${players.map(p => `
+          <tr>
+            <td><span class="player-name-link" onclick="showPlayerModal('${p.id}','${abbr}')">${p.name}</span></td>
+            <td class="mono text-muted">${p.pos}</td>
+            <td class="mono">${p.age}</td>
+            <td><span class="rtg badge ${rtgClass(p.rtg||75)}">${p.rtg||75}</span></td>
+            <td class="mono">${p.gp||0}</td>
+            <td class="mono">${p.g||0}</td>
+            <td class="mono">${p.a||0}</td>
+            <td class="mono" style="font-weight:600">${p.pts||0}</td>
+            <td class="mono">${p.cap > 0 ? fmt$(p.cap) : '<span class="text-muted">—</span>'}</td>
+            <td><button class="btn btn-outline" style="font-size:9px;padding:2px 8px" onclick="showPlayerModal('${p.id}','${abbr}')">⋯</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  $('view-roster').innerHTML = `
+    <div class="view-title">ROSTER</div>
+    <div class="tabs mb12">
+      ${tabs.map(t => `<div class="tab ${t.id === rosterTab ? 'active':''}" onclick="rosterTab='${t.id}';renderRoster()">${t.label}</div>`).join('')}
+    </div>
+    <div class="panel">
+      <div class="panel-body" style="padding:0;overflow-x:auto">
+        ${players.length ? tableHtml : '<div class="text-muted" style="padding:20px;text-align:center;font-size:12px">No players found. Rosters are loading live from NHL.com — wait a moment and try again.</div>'}
+      </div>
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+//  AHL VIEW
+// ──────────────────────────────────────────────────────────────
+function renderAHL() {
+  const abbr  = GS.team;
+  const t     = TEAMS[abbr];
+  const ahlPlayers = (ROSTERS[abbr] || []).filter(p => p.status === 'AHL');
+  const posOrder = { G:5, D:4, C:3, LW:2, RW:1, F:2 };
+  ahlPlayers.sort((a,b) => (posOrder[b.pos]||0) - (posOrder[a.pos]||0));
+
+  $('view-ahl').innerHTML = `
+    <div class="view-title">AHL AFFILIATE — ${t.ahl.toUpperCase()}</div>
+    <div class="panel">
+      <div class="panel-title">FARM SYSTEM</div>
+      <div class="panel-body" style="padding:0">
+        ${ahlPlayers.length ? `
+          <table class="tbl">
+            <thead><tr><th>PLAYER</th><th>POS</th><th>AGE</th><th>RTG</th><th>CONTRACT</th><th></th></tr></thead>
+            <tbody>
+              ${ahlPlayers.map(p=>`
+                <tr>
+                  <td>${p.name}</td>
+                  <td class="mono text-muted">${p.pos}</td>
+                  <td class="mono">${p.age}</td>
+                  <td><span class="rtg badge ${rtgClass(p.rtg||70)}">${p.rtg||70}</span></td>
+                  <td class="mono">${p.cap>0?fmt$(p.cap)+' / '+p.yrs+'yr':'<span class="text-muted">ELC</span>'}</td>
+                  <td>
+                    <button class="btn btn-outline" style="font-size:9px;padding:2px 8px" onclick="callUp('${p.id}','${abbr}')">Call Up</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>` : `
+          <div class="text-muted" style="padding:20px;text-align:center;font-size:12px">
+            No players currently on AHL roster.<br>
+            <span style="font-size:10px">Players on the NHL roster are shown in the Roster view.</span>
+          </div>`}
+      </div>
+    </div>`;
+}
+
+function callUp(pid, abbr) {
+  const p = (ROSTERS[abbr]||[]).find(x => x.id === pid);
+  if (!p) return;
+  p.status = 'NHL';
+  toast(`${p.name} called up to NHL roster`, 'success');
+  addNews('CALL UP', 'tag-sign', `${p.name} has been recalled from ${TEAMS[abbr].ahl}.`);
+  renderAHL();
+  updateCap();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  PLAYER MODAL
+// ──────────────────────────────────────────────────────────────
+function showPlayerModal(pid, abbr) {
+  const p = (ROSTERS[abbr]||[]).find(x => x.id === pid);
+  if (!p) return;
+
+  $('modal-box').innerHTML = `
+    <div class="modal-title">${p.name}</div>
+    <div class="detail-row"><span class="detail-key">Position</span><span>${p.pos}</span></div>
+    <div class="detail-row"><span class="detail-key">Age</span><span>${p.age}</span></div>
+    <div class="detail-row"><span class="detail-key">Rating</span><span class="rtg badge ${rtgClass(p.rtg||75)}">${p.rtg||75}</span></div>
+    <div class="detail-row"><span class="detail-key">Stats</span><span class="mono">${p.g}G ${p.a}A ${p.pts}PTS in ${p.gp}GP</span></div>
+    <div class="detail-row"><span class="detail-key">Cap Hit</span><span class="mono">${p.cap>0?fmt$(p.cap)+'/yr':'Unsigned'}</span></div>
+    <div class="detail-row"><span class="detail-key">Years Left</span><span>${p.yrs>0?p.yrs+' year(s)':'RFA'}</span></div>
+    <div class="detail-row"><span class="detail-key">NTC</span><span>${p.ntc?(p.ntc_type||'NTC'):'None'}</span></div>
+    <div class="detail-row"><span class="detail-key">Status</span><span>${p.status}</span></div>
+    <div class="modal-actions">
+      ${p.status === 'NHL' ? `<button class="btn btn-outline" onclick="sendToAHL('${pid}','${abbr}');closeModal()">Send to AHL</button>` : ''}
+      ${p.status === 'NHL' ? `<button class="btn btn-outline" onclick="placeOnIR('${pid}','${abbr}');closeModal()">Place on IR</button>` : ''}
+      ${p.status === 'IR'  ? `<button class="btn btn-outline" onclick="activateFromIR('${pid}','${abbr}');closeModal()">Activate from IR</button>` : ''}
+      ${p.status === 'AHL' ? `<button class="btn btn-ice" onclick="callUp('${pid}','${abbr}');closeModal()">Call Up</button>` : ''}
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+    </div>`;
+
+  $('modal-bg').classList.remove('hidden');
+}
+
+function sendToAHL(pid, abbr) {
+  const p = (ROSTERS[abbr]||[]).find(x => x.id === pid);
+  if (!p) return;
+  p.status = 'AHL';
+  toast(`${p.name} assigned to ${TEAMS[abbr].ahl}`, 'success');
+  addNews('ASSIGN', 'tag-info', `${p.name} assigned to ${TEAMS[abbr].ahl}.`);
+  if (currentView === 'roster') renderRoster();
+  updateCap();
+}
+
+function placeOnIR(pid, abbr) {
+  const p = (ROSTERS[abbr]||[]).find(x => x.id === pid);
+  if (!p) return;
+  p.status = 'IR';
+  toast(`${p.name} placed on IR`, 'success');
+  addNews('INJURY', 'tag-injury', `${p.name} placed on injured reserve.`);
+  if (currentView === 'roster') renderRoster();
+  updateCap();
+}
+
+function activateFromIR(pid, abbr) {
+  const p = (ROSTERS[abbr]||[]).find(x => x.id === pid);
+  if (!p) return;
+  p.status = 'NHL';
+  toast(`${p.name} activated from IR`, 'success');
+  addNews('ACTIVATED', 'tag-sign', `${p.name} activated from injured reserve.`);
+  if (currentView === 'roster') renderRoster();
+  updateCap();
+}
+
+function closeModal() { $('modal-bg').classList.add('hidden'); }
+
+// ──────────────────────────────────────────────────────────────
+//  TRADES VIEW
+// ──────────────────────────────────────────────────────────────
+let tradeState = {
+  myItems: [],   // {type:'player'|'pick', id, abbr, label}
+  theirItems: [],
+  targetTeam: Object.keys(TEAMS).filter(a=>a!=='BOS')[0],
+};
+
+function renderTrades() {
+  const myAbbr  = GS.team;
+  const t1      = TEAMS[myAbbr];
+  const theirAbbr = tradeState.targetTeam;
+  const t2      = TEAMS[theirAbbr] || TEAMS[Object.keys(TEAMS)[0]];
+
+  $('view-trades').innerHTML = `
+    <div class="view-title">TRADE CENTER</div>
+    <div class="panel mb12">
+      <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:11px;color:var(--text2)">Trading with:</span>
+          <select class="sm" onchange="tradeState.targetTeam=this.value;renderTrades()">
+            ${Object.keys(TEAMS).filter(a=>a!==myAbbr).map(a=>`
+              <option value="${a}" ${a===theirAbbr?'selected':''}>${TEAMS[a].name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="trade-grid">
+      <div class="trade-side">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ice);margin-bottom:10px;letter-spacing:1px">${t1.name.toUpperCase()}</div>
+        <div id="my-trade-items">
+          ${tradeState.myItems.map((item,i)=>`
+            <div class="trade-item">
+              <span>${item.label}</span>
+              <span class="rm" onclick="tradeState.myItems.splice(${i},1);renderTrades()">×</span>
+            </div>`).join('') || '<div class="text-muted" style="font-size:10px;padding:4px 0">No items added</div>'}
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:6px">ADD FROM ROSTER:</div>
+          <select class="sm w-full" id="my-player-pick" style="width:100%;margin-bottom:6px">
+            <option value="">— Select player —</option>
+            ${(ROSTERS[myAbbr]||[]).filter(p=>p.status==='NHL').map(p=>`<option value="p:${p.id}:${p.name}">${p.name} (${p.pos})</option>`).join('')}
+            <option value="pick:1st:2026 1st Round Pick">2026 1st Round Pick</option>
+            <option value="pick:2nd:2026 2nd Round Pick">2026 2nd Round Pick</option>
+            <option value="pick:3rd:2026 3rd Round Pick">2026 3rd Round Pick</option>
+          </select>
+          <button class="btn btn-outline" style="font-size:10px;padding:4px 10px" onclick="addTradeItem('my')">Add to Trade</button>
+        </div>
+      </div>
+
+      <div class="trade-middle">
+        <div style="font-size:28px">⇄</div>
+        <button class="btn btn-ice" style="font-size:10px;padding:6px 12px" onclick="proposeTrade()">PROPOSE</button>
+        <button class="btn btn-outline" style="font-size:9px;padding:4px 8px" onclick="clearTrade()">Clear</button>
+      </div>
+
+      <div class="trade-side">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ice);margin-bottom:10px;letter-spacing:1px">${t2.name.toUpperCase()}</div>
+        <div id="their-trade-items">
+          ${tradeState.theirItems.map((item,i)=>`
+            <div class="trade-item">
+              <span>${item.label}</span>
+              <span class="rm" onclick="tradeState.theirItems.splice(${i},1);renderTrades()">×</span>
+            </div>`).join('') || '<div class="text-muted" style="font-size:10px;padding:4px 0">No items added</div>'}
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:6px">ADD FROM THEIR ROSTER:</div>
+          <select class="sm w-full" id="their-player-pick" style="width:100%;margin-bottom:6px">
+            <option value="">— Select player —</option>
+            ${(ROSTERS[theirAbbr]||[]).filter(p=>p.status==='NHL').map(p=>`<option value="p:${p.id}:${p.name}">${p.name} (${p.pos})</option>`).join('')}
+            <option value="pick:1st:2026 1st Round Pick">2026 1st Round Pick</option>
+            <option value="pick:2nd:2026 2nd Round Pick">2026 2nd Round Pick</option>
+            <option value="pick:3rd:2026 3rd Round Pick">2026 3rd Round Pick</option>
+          </select>
+          <button class="btn btn-outline" style="font-size:10px;padding:4px 10px" onclick="addTradeItem('their')">Add to Trade</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function addTradeItem(side) {
+  const sel = $(side === 'my' ? 'my-player-pick' : 'their-player-pick');
+  if (!sel.value) return;
+  const parts = sel.value.split(':');
+  const abbr  = side === 'my' ? GS.team : tradeState.targetTeam;
+  const item  = { abbr, type: parts[0], id: parts[1], label: parts[2] || parts[1] };
+  if (side === 'my') tradeState.myItems.push(item);
+  else tradeState.theirItems.push(item);
+  renderTrades();
+}
+
+function clearTrade() {
+  tradeState.myItems = []; tradeState.theirItems = [];
+  renderTrades();
+}
+
+function proposeTrade() {
+  if (!tradeState.myItems.length && !tradeState.theirItems.length) {
+    toast('Add items to the trade first', 'error'); return;
+  }
+
+  // Simple AI acceptance logic based on value comparison
+  const myVal   = tradeState.myItems.reduce((s,item) => {
+    if (item.type === 'p') {
+      const p = (ROSTERS[GS.team]||[]).find(x=>x.id===item.id);
+      return s + (p?.rtg||70);
+    }
+    return s + (item.id==='1st'?65:item.id==='2nd'?55:45);
+  }, 0);
+  const theirVal = tradeState.theirItems.reduce((s,item) => {
+    if (item.type === 'p') {
+      const p = (ROSTERS[tradeState.targetTeam]||[]).find(x=>x.id===item.id);
+      return s + (p?.rtg||70);
+    }
+    return s + (item.id==='1st'?65:item.id==='2nd'?55:45);
+  }, 0);
+
+  const ratio   = myVal > 0 ? theirVal / myVal : 0;
+  const accepted = ratio >= 0.85 && ratio <= 1.3 && Math.random() > 0.25;
+
+  if (!accepted) {
+    toast(`${TEAMS[tradeState.targetTeam].name} rejected the trade offer`, 'error');
+    addNews('REJECTED', 'tag-trade', `Trade proposal rejected by the ${TEAMS[tradeState.targetTeam].name}.`);
+    return;
+  }
+
+  // Execute trade
+  tradeState.myItems.forEach(item => {
+    if (item.type === 'p') {
+      const p = (ROSTERS[GS.team]||[]).find(x=>x.id===item.id);
+      if (p) {
+        const newP = { ...p, id: `${tradeState.targetTeam}_${p._nhlId||p.id}`, status:'NHL' };
+        (ROSTERS[tradeState.targetTeam] = ROSTERS[tradeState.targetTeam]||[]).push(newP);
+        p.status = 'TRADED';
+      }
+    }
+  });
+  tradeState.theirItems.forEach(item => {
+    if (item.type === 'p') {
+      const p = (ROSTERS[tradeState.targetTeam]||[]).find(x=>x.id===item.id);
+      if (p) {
+        const newP = { ...p, id: `${GS.team}_${p._nhlId||p.id}`, status:'NHL' };
+        (ROSTERS[GS.team] = ROSTERS[GS.team]||[]).push(newP);
+        p.status = 'TRADED';
+      }
+    }
+  });
+
+  const myNames   = tradeState.myItems.map(i=>i.label).join(', ');
+  const theirNames = tradeState.theirItems.map(i=>i.label).join(', ');
+  toast('Trade accepted! 🎉', 'success');
+  addNews('TRADE', 'tag-trade', `${TEAMS[GS.team].name} trades ${myNames||'picks'} to ${TEAMS[tradeState.targetTeam].name} for ${theirNames||'picks'}.`);
+  clearTrade();
+  updateCap();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  WAIVERS
+// ──────────────────────────────────────────────────────────────
+function renderWaivers() {
+  // Build a waiver list from players on other teams who might be available
+  const allPlayers = [];
+  Object.entries(ROSTERS).forEach(([abbr, players]) => {
+    if (abbr === GS.team) return;
+    players.filter(p => p.status === 'NHL' && (p.rtg||0) < 72).forEach(p => {
+      allPlayers.push({...p, _team: abbr});
+    });
+  });
+  allPlayers.sort((a,b) => (b.rtg||0) - (a.rtg||0));
+  const waiversList = allPlayers.slice(0, 20);
+
+  $('view-waivers').innerHTML = `
+    <div class="view-title">WAIVERS</div>
+    <div class="panel mb12">
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--text2)">Players available on waivers (bottom of roster players from all teams).</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">AVAILABLE ON WAIVERS</div>
+      <div class="panel-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>PLAYER</th><th>POS</th><th>AGE</th><th>RTG</th><th>TEAM</th><th>GP</th><th>PTS</th><th></th></tr></thead>
+          <tbody>
+            ${waiversList.map(p=>`
+              <tr>
+                <td>${p.name}</td>
+                <td class="mono text-muted">${p.pos}</td>
+                <td class="mono">${p.age}</td>
+                <td><span class="rtg badge ${rtgClass(p.rtg||70)}">${p.rtg||70}</span></td>
+                <td class="mono text-muted">${p._team}</td>
+                <td class="mono">${p.gp||0}</td>
+                <td class="mono">${p.pts||0}</td>
+                <td><button class="btn btn-ice" style="font-size:9px;padding:3px 8px" onclick="claimWaiver('${p.id}','${p._team}')">Claim</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function claimWaiver(pid, fromAbbr) {
+  const p = (ROSTERS[fromAbbr]||[]).find(x=>x.id===pid);
+  if (!p) return;
+  const newP = {...p, id:`${GS.team}_${p._nhlId||p.id}`, status:'NHL'};
+  (ROSTERS[GS.team]=ROSTERS[GS.team]||[]).push(newP);
+  p.status = 'TRADED';
+  toast(`${p.name} claimed from waivers!`, 'success');
+  addNews('CLAIM', 'tag-sign', `${p.name} claimed off waivers from the ${TEAMS[fromAbbr]?.name || fromAbbr}.`);
+  renderWaivers();
+  updateCap();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  FREE AGENTS
+// ──────────────────────────────────────────────────────────────
+const FREE_AGENTS = [
+  {id:'fa_1',name:'Taylor Hall',pos:'LW',age:34,rtg:74,g:12,a:18,pts:30,gp:50,ask:3000000,yrs:2,type:'UFA'},
+  {id:'fa_2',name:'Max Pacioretty',pos:'LW',age:36,rtg:70,g:8,a:12,pts:20,gp:40,ask:2000000,yrs:1,type:'UFA'},
+  {id:'fa_3',name:'Sean Walker',pos:'RD',age:30,rtg:71,g:4,a:14,pts:18,gp:52,ask:2500000,yrs:2,type:'UFA'},
+  {id:'fa_4',name:'Tyler Motte',pos:'LW',age:30,rtg:64,g:6,a:6,pts:12,gp:56,ask:800000,yrs:1,type:'UFA'},
+  {id:'fa_5',name:'Marcus Johansson',pos:'C',age:34,rtg:68,g:8,a:14,pts:22,gp:50,ask:1500000,yrs:1,type:'UFA'},
+  {id:'fa_6',name:'Brent Burns',pos:'RD',age:41,rtg:68,g:4,a:16,pts:20,gp:44,ask:1000000,yrs:1,type:'UFA'},
+  {id:'fa_7',name:'Ryan Reaves',pos:'LW',age:38,rtg:58,g:2,a:4,pts:6,gp:40,ask:750000,yrs:1,type:'UFA'},
+  {id:'fa_8',name:'Tyson Barrie',pos:'RD',age:35,rtg:72,g:5,a:20,pts:25,gp:52,ask:3000000,yrs:2,type:'UFA'},
+];
+let faFilter = 'all';
+let signedFAs = new Set();
+
+function renderFA() {
+  const available = FREE_AGENTS.filter(p => !signedFAs.has(p.id));
+  $('view-fa').innerHTML = `
+    <div class="view-title">FREE AGENTS</div>
+    <div class="tabs mb12">
+      <div class="tab ${faFilter==='all'?'active':''}" onclick="faFilter='all';renderFA()">All UFA</div>
+      <div class="tab ${faFilter==='fwd'?'active':''}" onclick="faFilter='fwd';renderFA()">Forwards</div>
+      <div class="tab ${faFilter==='def'?'active':''}" onclick="faFilter='def';renderFA()">Defense</div>
+    </div>
+    <div class="panel">
+      <div class="panel-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>PLAYER</th><th>POS</th><th>AGE</th><th>RTG</th><th>GP</th><th>PTS</th><th>ASKING</th><th>YRS</th><th></th></tr></thead>
+          <tbody>
+            ${available
+              .filter(p => faFilter==='fwd' ? ['LW','RW','C','F'].includes(p.pos) :
+                           faFilter==='def' ? p.pos==='D' : true)
+              .map(p=>`
+              <tr>
+                <td>${p.name}</td>
+                <td class="mono text-muted">${p.pos}</td>
+                <td class="mono">${p.age}</td>
+                <td><span class="rtg badge ${rtgClass(p.rtg)}">${p.rtg}</span></td>
+                <td class="mono">${p.gp}</td>
+                <td class="mono">${p.pts}</td>
+                <td class="mono">${fmt$(p.ask)}</td>
+                <td class="mono">${p.yrs}yr</td>
+                <td><button class="btn btn-ice" style="font-size:9px;padding:3px 8px" onclick="signFA('${p.id}')">Sign</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function signFA(fid) {
+  const p = FREE_AGENTS.find(x=>x.id===fid);
+  if (!p) return;
+  const used = capUsed(GS.team);
+  if (used + p.ask > CAP) {
+    toast(`Not enough cap space to sign ${p.name}`, 'error'); return;
+  }
+  const newP = {
+    id: `${GS.team}_fa_${fid}`, _nhlId: null,
+    name: p.name, pos: p.pos, age: p.age,
+    cap: p.ask, yrs: p.yrs, ntc: false, ntc_type: null,
+    rtg: p.rtg, status: 'NHL',
+    g: p.g, a: p.a, pts: p.pts, gp: p.gp,
+  };
+  (ROSTERS[GS.team] = ROSTERS[GS.team]||[]).push(newP);
+  signedFAs.add(fid);
+  toast(`${p.name} signed for ${fmt$(p.ask)}/yr × ${p.yrs}yr!`, 'success');
+  addNews('SIGNED', 'tag-sign', `${GS.team} signs ${p.name} to a ${p.yrs}-year deal at ${fmt$(p.ask)}/yr.`);
+  renderFA();
+  updateCap();
+}
+
+// ──────────────────────────────────────────────────────────────
+//  CONTRACTS VIEW
+// ──────────────────────────────────────────────────────────────
+function renderContracts() {
+  const abbr   = GS.team;
+  const roster = (ROSTERS[abbr]||[]).filter(p => p.status==='NHL'||p.status==='IR');
+  const withCap = roster.filter(p=>p.cap>0).sort((a,b)=>b.cap-a.cap);
+  const noCap   = roster.filter(p=>!p.cap||p.cap===0);
+  const used    = capUsed(abbr);
+  const space   = CAP - used;
+
+  $('view-contracts').innerHTML = `
+    <div class="view-title">CONTRACTS & CAP</div>
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card">
+        <div class="stat-label">CAP USED</div>
+        <div class="stat-val" style="font-size:18px">${fmt$(used)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">CAP SPACE</div>
+        <div class="stat-val" style="font-size:18px;color:${space>3e6?'var(--green)':'var(--red)'}">${fmt$(space)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">CAP CEILING</div>
+        <div class="stat-val" style="font-size:18px">${fmt$(CAP)}</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">CONTRACTS (${withCap.length} with known cap hit)</div>
+      <div class="panel-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>PLAYER</th><th>POS</th><th>CAP HIT</th><th>YRS LEFT</th><th>NTC</th><th>STATUS</th></tr></thead>
+          <tbody>
+            ${withCap.map(p=>`<tr>
+              <td>${p.name}</td>
+              <td class="mono text-muted">${p.pos}</td>
+              <td class="mono" style="font-weight:600">${fmt$(p.cap)}</td>
+              <td class="mono">${p.yrs>0?p.yrs+'yr':'UFA'}</td>
+              <td>${p.ntc?`<span class="badge badge-ntc">${p.ntc_type||'NTC'}</span>`:''}</td>
+              <td>${p.status==='IR'?'<span class="badge badge-ir">IR</span>':''}</td>
+            </tr>`).join('')}
+            ${noCap.length ? `<tr><td colspan="6" style="color:var(--text3);font-size:10px;padding:8px">+ ${noCap.length} players without cap data (loaded from NHL API — contract amounts not available via public API)</td></tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+//  STANDINGS VIEW
+// ──────────────────────────────────────────────────────────────
+function renderStandings() {
+  // Simulated standings based on team OVR + some randomness
+  const divs = {
+    Atlantic:     ['BOS','BUF','DET','FLA','MTL','OTT','TBL','TOR'],
+    Metropolitan: ['CAR','CBJ','NJD','NYI','NYR','PHI','PIT','WSH'],
+    Central:      ['CHI','COL','DAL','MIN','NSH','STL','UTA','WPG'],
+    Pacific:      ['ANA','CGY','EDM','LAK','SJS','SEA','VAN','VGK'],
+  };
+
+  // Generate standings if not stored
+  if (!GS.standings) {
+    GS.standings = {};
+    Object.entries(TEAMS).forEach(([abbr, t]) => {
+      const base = t.ovr;
+      const gp   = Math.floor(Math.random() * 10 + 58);
+      const wpct  = Math.max(0.3, Math.min(0.75, (base - 70) / 40 + 0.45 + (Math.random()-0.5)*0.1));
+      const w     = Math.round(gp * wpct);
+      const otl   = Math.round(gp * 0.1);
+      const l     = gp - w - otl;
+      const pts   = w * 2 + otl;
+      GS.standings[abbr] = { gp, w, l, otl, pts };
+    });
+  }
+
+  const divHtml = Object.entries(divs).map(([div, teams]) => {
+    const sorted = [...teams].sort((a,b)=>(GS.standings[b]?.pts||0)-(GS.standings[a]?.pts||0));
+    return `
+      <div class="panel">
+        <div class="panel-title">${div.toUpperCase()} DIVISION</div>
+        <div class="panel-body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>TEAM</th><th>GP</th><th>W</th><th>L</th><th>OTL</th><th>PTS</th></tr></thead>
+            <tbody>
+              ${sorted.map((abbr,i) => {
+                const t = TEAMS[abbr]; const s = GS.standings[abbr]||{gp:72,w:36,l:28,otl:8,pts:80};
+                const isUser = abbr === GS.team;
+                return `<tr style="${isUser?'background:rgba(79,195,247,.06)':''}">
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span class="mono text-muted" style="font-size:9px;width:14px">${i+1}</span>
+                      <div class="t-logo" style="background:${t.c1};color:${t.c2};width:22px;height:22px;font-size:7px">${abbr}</div>
+                      <span style="${isUser?'color:var(--ice);font-weight:600':''}">${t.name}</span>
+                      ${isUser?'<span style="font-size:9px;color:var(--ice)">(YOU)</span>':''}
+                    </div>
+                  </td>
+                  <td class="mono">${s.gp}</td><td class="mono">${s.w}</td><td class="mono">${s.l}</td>
+                  <td class="mono">${s.otl}</td><td class="mono" style="font-weight:600">${s.pts}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }).join('');
+
+  $('view-standings').innerHTML = `<div class="view-title">STANDINGS</div>${divHtml}`;
+}
+
+// ──────────────────────────────────────────────────────────────
+//  DRAFT CENTER
+// ──────────────────────────────────────────────────────────────
+const PROSPECTS_2026 = [
+  {name:'James Hagens',pos:'C',age:18,rtg:88,nat:'🇺🇸',team:'Boston College'},
+  {name:'Matthew Schaefer',pos:'LD',age:18,rtg:86,nat:'🇨🇦',team:'Oshawa (OHL)'},
+  {name:'Porter Martone',pos:'RW',age:18,rtg:84,nat:'🇨🇦',team:'Brampton (OHL)'},
+  {name:'Jake O\'Brien',pos:'C',age:18,rtg:83,nat:'🇺🇸',team:'USNTDP'},
+  {name:'Caleb Desnoyers',pos:'C',age:18,rtg:82,nat:'🇨🇦',team:'Moncton (QMJHL)'},
+  {name:'Radim Mrtka',pos:'LD',age:18,rtg:81,nat:'🇨🇿',team:'HC Davos (NLA)'},
+  {name:'Anton Frondell',pos:'C',age:18,rtg:80,nat:'🇸🇪',team:'Djurgardens (SHL)'},
+  {name:'Carter Bear',pos:'LW',age:18,rtg:79,nat:'🇨🇦',team:'Everett (WHL)'},
+  {name:'Jackson Lacombe',pos:'LD',age:18,rtg:78,nat:'🇺🇸',team:'USNTDP'},
+  {name:'Sacha Boisvert',pos:'C',age:18,rtg:77,nat:'🇫🇷',team:'Rimouski (QMJHL)'},
+  {name:'Jack Murtagh',pos:'C',age:18,rtg:76,nat:'🇨🇦',team:'Kingston (OHL)'},
+  {name:'Aleksei Boikov',pos:'RD',age:18,rtg:75,nat:'🇷🇺',team:'SKA (KHL)'},
+  {name:'Alfons Freij',pos:'LW',age:18,rtg:74,nat:'🇸🇪',team:'Skelleftea (SHL)'},
+  {name:'Aydar Suniev',pos:'RW',age:18,rtg:74,nat:'🇷🇺',team:'CSKA (KHL)'},
+  {name:'Logan Hensler',pos:'RD',age:18,rtg:73,nat:'🇺🇸',team:'Wisconsin (NCAA)'},
+  {name:'Miles Wood',pos:'LW',age:18,rtg:73,nat:'🇺🇸',team:'USNTDP'},
+  {name:'Marcus Gidlof',pos:'C',age:18,rtg:72,nat:'🇸🇪',team:'Timra (HockeyAllsvenskan)'},
+  {name:'Ondrej Chalusky',pos:'RW',age:18,rtg:71,nat:'🇨🇿',team:'Trinec (Czech)'},
+  {name:'Tristan Luneau',pos:'RD',age:18,rtg:71,nat:'🇨🇦',team:'Gatineau (QMJHL)'},
+  {name:'Luca Cagnoni',pos:'LD',age:18,rtg:70,nat:'🇮🇹',team:'Portland (WHL)'},
+];
+
+
+// ══════════════════════════════════════════════════════════════════
+//  DRAFT SYSTEM — NHL Lottery + 7-Round Snake Draft
+// ══════════════════════════════════════════════════════════════════
+
+// Real NHL lottery odds per 1,000 combinations (seeds 1-16, worst to best)
+const LOTTERY_ODDS = [185, 135, 115, 95, 85, 75, 65, 60, 50, 35, 30, 25, 20, 15, 5, 5];
+
+// Draft state
+let DRAFT = {
+  active:       false,   // is draft in progress?
+  order:        [],      // final pick order [abbr, abbr, ...] length 224 (32×7)
+  lotteryDone:  false,
+  lotteryAnim:  [],      // animation frames for lottery reveal
+  currentPick:  0,       // index into order[] for user's current selection
+  picks:        {},      // picks[pickNum] = { team, player } or null
+  prospects:    [],      // generated prospect pool
+  userPicks:    [],      // pick numbers where user picks
+  aiDone:       new Set(), // pick indices already made
+};
+
+// ── Prospect pool generator ───────────────────────────────────
+const PROSPECT_FIRST = ['Luca','Ethan','Matej','Cole','Blake','Axel','Theo','Emil','Niko',
+  'Owen','Jack','Finn','Lukas','Max','Oliver','Felix','Anton','Hugo','Simon','Leon',
+  'Patrik','Ryder','Brady','Chase','Carter','Hunter','Mason','Logan','Dylan','Aiden'];
+const PROSPECT_LAST  = ['Andersson','Johansson','Novak','MacLeod','Sullivan','Bergstrom',
+  'Karlsson','Schmidt','Petrov','Leblanc','Morrison','Nielsen','Walsh','Kowalski','Dubois',
+  'Lindqvist','Hansen','Persson','Kozlov','Belanger','Eriksson','Fortin','Cormier','Ricci',
+  'Fontaine','Bergeron','Tremblay','Gagnon','Lavoie','Poulin'];
+const PROSPECT_POS   = ['C','LW','RW','D','D','G'];
+const PROSPECT_TEAMS = [
+  'Boston College','Michigan','Minnesota','Wisconsin','Denver','Providence',
+  'Quebec (QMJHL)','Saginaw (OHL)','Windsor (OHL)','Portland (WHL)',
+  'Everett (WHL)','Djurgarden (SHL)','Frolunda (SHL)','Skelleftea (SHL)',
+  'Trinec (Czech)','Ocelari (Czech)','Jokerit (Liiga)','TPS (Liiga)',
+  'SKA St. Petersburg','CSKA Moscow','USNTDP','U.S. U18','Team Canada U18',
+];
+
+function generateProspects(n) {
+  const used = new Set();
+  const pool = [];
+  for (let i = 0; i < n; i++) {
+    let name;
+    do {
+      const f = PROSPECT_FIRST[Math.floor(Math.random()*PROSPECT_FIRST.length)];
+      const l = PROSPECT_LAST [Math.floor(Math.random()*PROSPECT_LAST.length)];
+      name = f + ' ' + l;
+    } while (used.has(name));
+    used.add(name);
+    const pos   = PROSPECT_POS[Math.floor(Math.random()*PROSPECT_POS.length)];
+    const team  = PROSPECT_TEAMS[Math.floor(Math.random()*PROSPECT_TEAMS.length)].trim();
+    // Rating drops off by round — 1st round 78-92, 2nd 70-82, etc.
+    const baseRtg = Math.max(55, 93 - Math.floor(i / 32) * 8 - Math.floor(Math.random()*8));
+    pool.push({
+      id:     'p_' + i,
+      name,
+      pos,
+      team,
+      age:    17 + Math.floor(Math.random()*3),
+      rtg:    baseRtg,
+      picked: false,
+    });
+  }
+  return pool;
+}
+
+// ── Build draft order via NHL lottery rules ───────────────────
+function runLottery() {
+  // Get all 32 teams sorted by points (worst first)
+  const allTeams = Object.keys(TEAMS).sort((a,b) =>
+    (GS.standings[a]?.pts||0) - (GS.standings[b]?.pts||0)
+  );
+
+  // Split into non-playoff (bottom 16 by pts) and playoff teams
+  // Actual: 16 non-playoff teams. We'll use bottom 16 by pts.
+  const nonPlayoff = allTeams.slice(0, 16);   // worst 16
+  const playoffs   = allTeams.slice(16);       // best 16
+
+  // Weighted lottery — assign combinations pool
+  const pool = [];
+  nonPlayoff.forEach((team, idx) => {
+    const combos = LOTTERY_ODDS[idx] || 5;
+    for (let c = 0; c < combos; c++) pool.push({ team, seed: idx + 1 });
+  });
+
+  // Shuffle pool
+  pool.sort(() => Math.random() - 0.5);
+
+  // DRAW 1 — Pick #1
+  let draw1 = pool[Math.floor(Math.random() * pool.length)];
+  // Max 10-spot jump: if seed > 11, clamp winner to seed-10 position
+  // and give #1 to worst team
+  let pick1Team, lotteryWinner1 = draw1.team, lotteryWinner1Seed = draw1.seed;
+  if (draw1.seed > 11) {
+    pick1Team = nonPlayoff[0]; // worst team guaranteed #1
+  } else {
+    pick1Team = draw1.team;
+  }
+
+  // DRAW 2 — Pick #2 (excluding pick1Team)
+  const pool2 = pool.filter(c => c.team !== pick1Team);
+  pool2.sort(() => Math.random() - 0.5);
+  let draw2 = pool2[Math.floor(Math.random() * pool2.length)];
+  let pick2Team, lotteryWinner2Seed = draw2.seed;
+  if (draw2.seed > 11) {
+    // Move up max 10: find the team that would be at seed-10 after pick1 removed
+    const remaining = nonPlayoff.filter(t => t !== pick1Team);
+    pick2Team = remaining[Math.min(draw2.seed - 11, remaining.length - 1)];
+  } else {
+    pick2Team = draw2.team;
+  }
+
+  // Remaining lottery teams in reverse-standings order (picks 3-16)
+  const remaining = nonPlayoff.filter(t => t !== pick1Team && t !== pick2Team);
+
+  // Picks 17-32: playoff teams, sorted by elimination order
+  // (worst record first — simplify as reverse of pts)
+  const playoffSorted = [...playoffs].sort((a,b) =>
+    (GS.standings[a]?.pts||0) - (GS.standings[b]?.pts||0)
+  );
+
+  // Build round 1 order
+  const round1 = [pick1Team, pick2Team, ...remaining, ...playoffSorted];
+
+  // Build full 7-round order (rounds 2-7 = full reverse standings)
+  const fullOrder = [...round1];
+  const allByPts = [...allTeams]; // already sorted worst→best
+  for (let round = 2; round <= 7; round++) {
+    allByPts.forEach(t => fullOrder.push(t));
+  }
+
+  // Store lottery animation metadata
+  DRAFT.lotteryAnim = [
+    { pick: 1, winner: pick1Team, winnerSeed: lotteryWinner1Seed, drawnTeam: lotteryWinner1 },
+    { pick: 2, winner: pick2Team, winnerSeed: lotteryWinner2Seed, drawnTeam: draw2.team },
+  ];
+
+  DRAFT.order       = fullOrder;
+  DRAFT.lotteryDone = true;
+  DRAFT.picks       = {};
+  DRAFT.prospects   = generateProspects(fullOrder.length + 20);
+  DRAFT.active      = true;
+  DRAFT.currentPick = 0;
+  DRAFT.aiDone      = new Set();
+
+  // Find all picks belonging to user's team
+  DRAFT.userPicks = fullOrder
+    .map((t, i) => t === GS.team ? i : -1)
+    .filter(i => i >= 0);
+
+  // AI makes all picks before the user's first pick automatically
+  runAIPicks();
+}
+
+// ── AI auto-picks for all non-user picks ─────────────────────
+function runAIPicks() {
+  const nextUserPick = DRAFT.userPicks.find(i => !DRAFT.picks[i]);
+  const limit = nextUserPick !== undefined ? nextUserPick : DRAFT.order.length;
+
+  for (let i = DRAFT.currentPick; i < limit; i++) {
+    if (DRAFT.picks[i] || DRAFT.aiDone.has(i)) continue;
+    const team = DRAFT.order[i];
+    if (team === GS.team) break;
+
+    // AI picks best available prospect for position need
+    const available = DRAFT.prospects.filter(p => !p.picked);
+    if (!available.length) break;
+
+    // Simple need assessment
+    const roster = ROSTERS[team] || [];
+    const posCount = {};
+    roster.forEach(p => { posCount[p.pos] = (posCount[p.pos]||0)+1; });
+    // Score prospects: best rating + slight bonus for needed positions
+    const scored = available.map(p => {
+      let score = p.rtg;
+      if ((posCount[p.pos]||0) < 3) score += 5;
+      return { p, score };
+    });
+    scored.sort((a,b) => b.score - a.score);
+    const picked = scored[0].p;
+    picked.picked = true;
+    DRAFT.picks[i] = { team, player: picked };
+    DRAFT.aiDone.add(i);
+    if (i >= DRAFT.currentPick) DRAFT.currentPick = i + 1;
+  }
+}
+
+// ── User makes a pick ─────────────────────────────────────────
+function userPick(prospectId) {
+  const nextPick = DRAFT.userPicks.find(i => !DRAFT.picks[i]);
+  if (nextPick === undefined) return;
+
+  const prospect = DRAFT.prospects.find(p => p.id === prospectId && !p.picked);
+  if (!prospect) { toast('Player already taken', 'error'); return; }
+
+  prospect.picked = true;
+  DRAFT.picks[nextPick] = { team: GS.team, player: prospect };
+  DRAFT.aiDone.add(nextPick);
+  DRAFT.currentPick = nextPick + 1;
+
+  // Add to user's roster
+  const newPlayer = {
+    id:       GS.team + '_draft_' + prospect.id,
+    name:     prospect.name,
+    pos:      prospect.pos,
+    age:      prospect.age,
+    cap:      925000,
+    yrs:      3,
+    ntc:      false,
+    ntc_type: null,
+    rtg:      prospect.rtg,
+    status:   'AHL',
+    g:0, a:0, pts:0, gp:0,
+  };
+  ROSTERS[GS.team].push(newPlayer);
+
+  const round = Math.floor(nextPick / 32) + 1;
+  const pickInRound = (nextPick % 32) + 1;
+  addNews('DRAFTED','tag-sign',
+    `${GS.team} selects ${prospect.name} (${prospect.pos}) with pick #${nextPick+1} (Round ${round}, Pick ${pickInRound}).`);
+  toast(`${prospect.name} selected!`, 'success');
+
+  // AI picks until next user pick
+  runAIPicks();
+  renderDraft();
+}
+
+// ── Advance past a user pick (skip) ──────────────────────────
+function skipPick() {
+  const nextPick = DRAFT.userPicks.find(i => !DRAFT.picks[i]);
+  if (nextPick === undefined) return;
+  // AI takes it
+  const available = DRAFT.prospects.filter(p => !p.picked);
+  if (available.length) {
+    const picked = available[0];
+    picked.picked = true;
+    DRAFT.picks[nextPick] = { team: GS.team, player: picked };
+    DRAFT.aiDone.add(nextPick);
+    DRAFT.currentPick = nextPick + 1;
+  }
+  runAIPicks();
+  renderDraft();
+}
+
+// ── Render draft UI ───────────────────────────────────────────
+function renderDraft() {
+  const inOffseason = GS.simPhase === 'offseason' || GS.simPhase === 'preseason';
+
+  if (!DRAFT.lotteryDone) {
+    renderLotterySetup();
+    return;
+  }
+
+  // Find next user pick
+  const nextUserPickIdx = DRAFT.userPicks.find(i => !DRAFT.picks[i]);
+  const draftComplete   = nextUserPickIdx === undefined &&
+    DRAFT.userPicks.every(i => DRAFT.picks[i]);
+
+  // Available prospects (not yet picked)
+  const available = DRAFT.prospects.filter(p => !p.picked).slice(0, 40);
+
+  // User's picks so far
+  const myPicks = DRAFT.userPicks
+    .filter(i => DRAFT.picks[i])
+    .map(i => ({ pickNum: i+1, ...DRAFT.picks[i] }));
+
+  // Round/pick display for next pick
+  const nextRound = nextUserPickIdx !== undefined ? Math.floor(nextUserPickIdx/32)+1 : null;
+  const nextPickInRound = nextUserPickIdx !== undefined ? (nextUserPickIdx%32)+1 : null;
+
+  // Recent picks board (last 8 overall picks)
+  const recentPicks = Object.entries(DRAFT.picks)
+    .sort((a,b)=>parseInt(b[0])-parseInt(a[0]))
+    .slice(0,8)
+    .map(([i,p])=>({pickNum:parseInt(i)+1,...p}));
+
+  $('view-draft').innerHTML = `
+    <div class="vtitle">NHL DRAFT — LOTTERY RESULTS & DRAFT BOARD</div>
+
+    <!-- Lottery results banner -->
+    <div class="panel" style="margin-bottom:13px;border-color:var(--gold)">
+      <div class="ptitle" style="color:var(--gold)">🏒 DRAFT LOTTERY RESULTS</div>
+      <div class="pbody" style="display:flex;gap:24px;flex-wrap:wrap">
+        ${DRAFT.lotteryAnim.map(d=>`
+          <div style="text-align:center;min-width:140px">
+            <div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;margin-bottom:4px">PICK #${d.pick} OVERALL</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+              <div style="width:28px;height:28px;border-radius:3px;background:${TEAMS[d.winner]?.c1||'#333'};display:flex;align-items:center;justify-content:center;font-size:7px;font-family:var(--mono);color:${TEAMS[d.winner]?.c2||'#fff'};font-weight:700">${d.winner}</div>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:${d.winner===GS.team?'var(--ice)':'var(--text)'}">${TEAMS[d.winner]?.name||d.winner}</div>
+                <div style="font-size:9px;color:var(--text2)">Seed #${d.winnerSeed} · ${LOTTERY_ODDS[(d.winnerSeed-1)]||5}/1000 odds${d.drawnTeam!==d.winner?' · Lucky jump!':''}</div>
+              </div>
+            </div>
+          </div>`).join('<div style="width:1px;background:var(--border)"></div>')}
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          ${!draftComplete&&nextUserPickIdx!==undefined?`
+            <div style="text-align:right">
+              <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">YOUR NEXT PICK</div>
+              <div style="font-size:16px;font-weight:700;color:var(--ice)">Round ${nextRound}, Pick ${nextPickInRound}</div>
+              <div style="font-size:9px;color:var(--text2)">Overall #${nextUserPickIdx+1}</div>
+            </div>`:''}
+          ${draftComplete?`<div style="color:var(--green);font-weight:700">✓ Draft Complete</div>`:''}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+
+      <!-- Available prospects (left) -->
+      <div>
+        <div class="panel">
+          <div class="ptitle">
+            AVAILABLE PROSPECTS
+            ${nextUserPickIdx!==undefined?`<button class="btn btn-outline btn-sm" onclick="skipPick()">Skip Pick</button>`:''}
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr><th>#</th><th>PROSPECT</th><th>POS</th><th>AGE</th><th>RTG</th><th>TEAM</th><th></th></tr></thead>
+              <tbody>
+                ${available.map((p,i)=>`<tr>
+                  <td class="mono tdim">${i+1}</td>
+                  <td style="font-weight:600">${p.name}</td>
+                  <td class="mono tdim">${p.pos}</td>
+                  <td class="mono">${p.age}</td>
+                  <td><span class="rtg badge ${rtgClass(p.rtg)}">${p.rtg}</span></td>
+                  <td class="tdim" style="font-size:10px">${p.team}</td>
+                  <td>${nextUserPickIdx!==undefined?
+                    `<button class="btn btn-ice btn-sm" onclick="userPick('${p.id}')">Draft</button>`:
+                    `<span class="tdim" style="font-size:10px">—</span>`}
+                  </td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: My picks + recent board -->
+      <div>
+        <!-- My picks -->
+        <div class="panel" style="margin-bottom:13px">
+          <div class="ptitle">YOUR DRAFT PICKS</div>
+          ${myPicks.length?`
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr><th>PICK</th><th>RD</th><th>PLAYER</th><th>POS</th><th>RTG</th><th>STATUS</th></tr></thead>
+              <tbody>
+                ${myPicks.map(({pickNum,player})=>{
+                  const rd=Math.ceil(pickNum/32);
+                  return `<tr style="background:rgba(79,195,247,.05)">
+                    <td class="mono" style="color:var(--ice)">#${pickNum}</td>
+                    <td class="mono tdim">R${rd}</td>
+                    <td style="font-weight:600">${player.name}</td>
+                    <td class="mono tdim">${player.pos}</td>
+                    <td><span class="rtg badge ${rtgClass(player.rtg)}">${player.rtg}</span></td>
+                    <td><span class="badge b-ahl">AHL</span></td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`:`<div class="pbody tdim" style="font-size:11px">No picks made yet.</div>`}
+        </div>
+
+        <!-- Full draft board (recent picks) -->
+        <div class="panel">
+          <div class="ptitle">DRAFT BOARD — RECENT PICKS</div>
+          ${recentPicks.length?`
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr><th>#</th><th>TEAM</th><th>PLAYER</th><th>POS</th><th>RTG</th></tr></thead>
+              <tbody>
+                ${recentPicks.map(({pickNum,team,player})=>{
+                  const me=team===GS.team;
+                  return `<tr style="${me?'background:rgba(79,195,247,.07)':''}">
+                    <td class="mono tdim">${pickNum}</td>
+                    <td><div style="display:flex;align-items:center;gap:6px">
+                      <div style="width:14px;height:14px;border-radius:2px;background:${TEAMS[team]?.c1||'#333'};flex-shrink:0"></div>
+                      <span style="${me?'color:var(--ice);font-weight:600':''}font-size:10px">${team}</span>
+                    </div></td>
+                    <td style="font-weight:${me?700:400}">${player.name}</td>
+                    <td class="mono tdim">${player.pos}</td>
+                    <td><span class="rtg badge ${rtgClass(player.rtg)}">${player.rtg}</span></td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`:`<div class="pbody tdim" style="font-size:11px">Draft picks will appear here.</div>`}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Pre-lottery setup screen ──────────────────────────────────
+function renderLotterySetup() {
+  // Build standings for lottery odds preview
+  const allTeams = Object.keys(TEAMS).sort((a,b)=>
+    (GS.standings[a]?.pts||0)-(GS.standings[b]?.pts||0)
+  );
+  const nonPlayoff = allTeams.slice(0,16);
+  const canRunLottery = GS.simPhase==='offseason'||GS.simPhase==='preseason';
+
+  $('view-draft').innerHTML = `
+    <div class="vtitle">NHL DRAFT LOTTERY</div>
+
+    <div class="panel" style="margin-bottom:13px">
+      <div class="pbody" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:16px;font-weight:700">2026 NHL Draft Lottery</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">
+            16 non-playoff teams · 2 lottery draws · Max 10-spot jump · 1,000 combinations
+          </div>
+        </div>
+        <div style="margin-left:auto">
+          ${canRunLottery||true?`
+            <button class="btn btn-ice" onclick="runLotteryAndRender()" style="font-size:13px;padding:10px 22px">
+              🏒 Run Draft Lottery
+            </button>`:`
+            <div style="font-size:11px;color:var(--text2)">Complete the season first</div>`}
+        </div>
+      </div>
+    </div>
+
+    <!-- Lottery odds table -->
+    <div class="panel">
+      <div class="ptitle">LOTTERY ODDS — BOTTOM 16 TEAMS BY PTS</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>SEED</th><th>TEAM</th><th>GP</th><th>PTS</th>
+              <th>ODDS (#1 PICK)</th><th>COMBOS</th><th>ELIGIBLE FOR #1</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${nonPlayoff.map((a,i)=>{
+              const s=GS.standings[a]||{gp:0,pts:0};
+              const odds=LOTTERY_ODDS[i]||5;
+              const eligible=i<11;
+              const me=a===GS.team;
+              return `<tr style="${me?'background:rgba(79,195,247,.07)':''}">
+                <td class="mono" style="color:${eligible?'var(--gold)':'var(--text3)'}">${i+1}</td>
+                <td><div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:20px;height:20px;border-radius:3px;background:${TEAMS[a].c1};display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:${TEAMS[a].c2}">${a}</div>
+                  <span style="${me?'color:var(--ice);font-weight:700':''}">${TEAMS[a]?.name||a}${me?' ★':''}</span>
+                </div></td>
+                <td class="mono">${s.gp}</td>
+                <td class="mono" style="font-weight:600">${s.pts}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div style="width:${Math.round(odds/1.85)}px;height:6px;background:${eligible?'var(--gold)':'var(--border)'};border-radius:3px;min-width:2px"></div>
+                    <span class="mono" style="color:${eligible?'var(--gold)':'var(--text2)'}">${(odds/10).toFixed(1)}%</span>
+                  </div>
+                </td>
+                <td class="mono tdim">${odds}</td>
+                <td style="text-align:center">${eligible?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function runLotteryAndRender() {
+  DRAFT.lotteryDone = false;
+  DRAFT.active = false;
+  runLottery();
+  renderDraft();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SIMULATION ENGINE
+// ══════════════════════════════════════════════════════════════════
+
+const NUM_WEEKS = 26;
+
+// Extend GS with sim fields on first run
+function ensureSimState() {
+  if (!GS.simPhase)    GS.simPhase    = 'preseason';
+  if (!GS.week)        GS.week        = 1;
+  if (!GS.schedule)    GS.schedule    = [];
+  if (!GS.results)     GS.results     = [];
+  if (!GS.injuries)    GS.injuries    = [];
+  if (!GS.playoffState) GS.playoffState = null;
+}
+
+function initStandings() {
+  GS.standings = {};
+  Object.keys(TEAMS).forEach(a => {
+    GS.standings[a] = { gp:0, w:0, l:0, otl:0, pts:0, gf:0, ga:0 };
+  });
+}
+
+// ── Team strength 55–99 ───────────────────────────────────────
+function teamStrength(abbr) {
+  const roster = (ROSTERS[abbr] || []).filter(p => p.status === 'NHL');
+  if (!roster.length) return TEAMS[abbr]?.ovr || 75;
+  const fwd  = roster.filter(p => ['LW','RW','C','F'].includes(p.pos));
+  const def  = roster.filter(p => p.pos === 'D');
+  const goal = roster.filter(p => p.pos === 'G');
+  const avg  = arr => arr.length ? arr.reduce((s,p)=>s+(p.rtg||75),0)/arr.length : 75;
+  return Math.round(avg(fwd)*0.45 + avg(def)*0.30 + avg(goal)*0.25);
+}
+
+// ── Schedule builder ──────────────────────────────────────────
+function generateSchedule() {
+  // 32 teams × 82 games / 2 = 1312 total unique matchups
+  const teams = Object.keys(TEAMS);
+  const divMap = {};
+  teams.forEach(a => { const d = TEAMS[a].div; (divMap[d] = divMap[d] || []).push(a); });
+
+  const games = [];
+  const pairCount = {}; // how many times pair A-B has been scheduled
+
+  function addGame(home, away) {
+    const key = [home, away].sort().join('|');
+    pairCount[key] = (pairCount[key] || 0) + 1;
+    games.push({ home, away });
+  }
+
+  // Each team: 6 vs each div rival, rest vs others — but only schedule HOME games
+  // to avoid duplication (away games come from the opponent's home schedule)
+  teams.forEach(home => {
+    const divRivals = (divMap[TEAMS[home].div] || []).filter(a => a !== home);
+    const others    = teams.filter(a => a !== home && !divRivals.includes(a));
+
+    // 3 home games vs each div rival (3 away handled when rival iterates)
+    divRivals.forEach(away => {
+      for (let i = 0; i < 3; i++) addGame(home, away);
+    });
+
+    // ~20 home games vs non-div
+    const pool = [...others, ...others].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < 20; i++) addGame(home, pool[i % pool.length]);
+  });
+
+  // Shuffle then assign weeks
+  games.sort(() => Math.random() - 0.5);
+
+  // Count games per team
+  const teamWeekGames = {};
+  teams.forEach(a => { teamWeekGames[a] = Array(NUM_WEEKS + 1).fill(0); });
+
+  const schedule = [];
+  games.forEach(({ home, away }) => {
+    // Find lowest week where both teams have room (max 4 games/week)
+    let placed = false;
+    for (let w = 1; w <= NUM_WEEKS; w++) {
+      if (teamWeekGames[home][w] < 4 && teamWeekGames[away][w] < 4) {
+        schedule.push({ home, away, week: w });
+        teamWeekGames[home][w]++;
+        teamWeekGames[away][w]++;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      schedule.push({ home, away, week: NUM_WEEKS });
+    }
+  });
+
+  GS.schedule = schedule;
+}
+
+
+// ── Simulate one game ─────────────────────────────────────────
+function simGame(home, away) {
+  const hs = teamStrength(home) + 4 + Math.random() * 10; // home ice
+  const as = teamStrength(away)     + Math.random() * 10;
+  const total = Math.floor(Math.random() * 4) + 4; // 4-7 goals
+  let hg = Math.round(total * hs / (hs + as));
+  let ag = total - hg;
+  if (hg === ag) Math.random() < 0.5 ? hg++ : ag++;
+  if (hg > ag) return { w:home, l:away, wg:hg, lg:ag, ot:false };
+  const ot = Math.random() < 0.22;
+  return { w:away, l:home, wg:ag, lg:hg, ot };
+}
+
+// ── Apply result to standings ─────────────────────────────────
+function applyResult(r) {
+  const ws = GS.standings[r.w];
+  const ls = GS.standings[r.l];
+  if (!ws || !ls) return;
+  ws.gp++; ws.w++; ws.pts += 2; ws.gf += r.wg; ws.ga += r.lg;
+  ls.gp++; ls[r.ot ? 'otl' : 'l']++; if (r.ot) ls.pts++; ls.gf += r.lg; ls.ga += r.wg;
+}
+
+// ── Distribute stats to players ───────────────────────────────
+function accrueStats(abbr, won) {
+  const nhl  = (ROSTERS[abbr] || []).filter(p => p.status === 'NHL');
+  const fwd  = nhl.filter(p => ['LW','RW','C','F'].includes(p.pos));
+  const def  = nhl.filter(p => p.pos === 'D');
+  const goal = nhl.filter(p => p.pos === 'G');
+  nhl.forEach(p => { p.gp = (p.gp || 0) + 1; });
+  const scorers = [...fwd, ...def.slice(0, 3)];
+  if (!scorers.length) return;
+  const weights = scorers.map(p => Math.max((p.rtg || 70) - 55, 1));
+  const wtotal  = weights.reduce((s, w) => s + w, 0);
+  function pick() {
+    let r = Math.random() * wtotal;
+    for (let i = 0; i < scorers.length; i++) { r -= weights[i]; if (r <= 0) return scorers[i]; }
+    return scorers[0];
+  }
+  const numGoals = won ? Math.floor(Math.random() * 3) + 2 : Math.floor(Math.random() * 3);
+  for (let g = 0; g < numGoals; g++) {
+    const scorer = pick();
+    scorer.g   = (scorer.g   || 0) + 1;
+    scorer.pts = (scorer.pts || 0) + 1;
+    const helper = pick();
+    if (helper !== scorer) { helper.a = (helper.a || 0) + 1; helper.pts = (helper.pts || 0) + 1; }
+  }
+  if (goal.length) goal[0].gp = (goal[0].gp || 0) + 1;
+}
+
+// ── Injuries (called once per week for user's team) ───────────
+function rollInjuries(abbr) {
+  const nhl = (ROSTERS[abbr] || []).filter(p => p.status === 'NHL' && p.pos !== 'G');
+  nhl.forEach(p => {
+    if (Math.random() < 0.016) {
+      const g = Math.floor(Math.random() * 14) + 3;
+      p.status = 'IR';
+      GS.injuries.push({ player: p.name, team: abbr, gamesLeft: g });
+      addNews('INJURY', 'tag-injury', `${p.name} placed on IR. Out ~${g} games.`);
+    }
+  });
+  GS.injuries = GS.injuries.filter(inj => {
+    inj.gamesLeft -= 3;
+    if (inj.gamesLeft <= 0) {
+      const p = (ROSTERS[inj.team] || []).find(x => x.name === inj.player && x.status === 'IR');
+      if (p) p.status = 'NHL';
+      if (inj.team === GS.team) addNews('RETURN', 'tag-sign', `${inj.player} activated from IR.`);
+      return false;
+    }
+    return true;
+  });
+}
+
+// ── Sim N weeks ───────────────────────────────────────────────
+function simWeeks(n) {
+  ensureSimState();
+  if (GS.simPhase !== 'regular') return;
+  for (let i = 0; i < n; i++) {
+    // Play all games scheduled for this week
+    GS.schedule.filter(g => g.week === GS.week).forEach(({ home, away }) => {
+      const r = simGame(home, away);
+      applyResult(r);
+      accrueStats(home, r.w === home);
+      accrueStats(away, r.w === away);
+      GS.results.push({ week: GS.week, ...r });
+      if (home === GS.team || away === GS.team) {
+        const won = r.w === GS.team;
+        const opp = home === GS.team ? away : home;
+        const ug  = home === GS.team ? r.wg : r.lg;
+        const og  = home === GS.team ? r.lg : r.wg;
+        addNews(won?'WIN':'LOSS', won?'tag-sign':'tag-injury',
+          `${TEAMS[GS.team]?.name} ${won?'defeat':'fall to'} ${TEAMS[opp]?.name||opp} ${ug}-${og}${r.ot?' (OT)':''}.`);
+      }
+    });
+    rollInjuries(GS.team);
+    GS.week++;
+    // Check if season is over AFTER incrementing
+    if (GS.week > NUM_WEEKS) {
+      startPlayoffs();
+      saveGame();
+      return;
+    }
+  }
+  saveGame();
+}
+
+function simToPlayoffs() {
+  ensureSimState();
+  while (GS.simPhase === 'regular') {
+    if (GS.week > NUM_WEEKS) { startPlayoffs(); break; }
+    simWeeks(1);
+  }
+}
+
+// ── Playoffs ──────────────────────────────────────────────────
+function getPlayoffSeeds() {
+  const byConf={East:[],West:[]};
+  Object.keys(TEAMS).forEach(a=>{ byConf[TEAMS[a].conf].push(a); });
+  const sort=arr=>[...arr].sort((a,b)=>(GS.standings[b]?.pts||0)-(GS.standings[a]?.pts||0));
+  return {East:sort(byConf.East).slice(0,8), West:sort(byConf.West).slice(0,8)};
+}
+
+function startPlayoffs() {
+  GS.simPhase='playoffs';
+  const seeds=getPlayoffSeeds();
+  GS.playoffState={
+    round:0,
+    seeds,
+    // [1v8, 2v7, 3v6, 4v5] per conf
+    bracket:{
+      East:[[seeds.East[0],seeds.East[7]],[seeds.East[1],seeds.East[6]],[seeds.East[2],seeds.East[5]],[seeds.East[3],seeds.East[4]]],
+      West:[[seeds.West[0],seeds.West[7]],[seeds.West[1],seeds.West[6]],[seeds.West[2],seeds.West[5]],[seeds.West[3],seeds.West[4]]],
+    },
+    history:[],
+    champion:null,
+  };
+  addNews('PLAYOFFS','tag-sign','🏒 The Stanley Cup Playoffs begin! 16 teams remain.');
+  saveGame();
+}
+
+function simSeries(a,b) {
+  let wa=0,wb=0;
+  while(wa<4&&wb<4){ simGame(a,b).w===a?wa++:wb++; }
+  return {winner:wa===4?a:b,loser:wa===4?b:a,wA:wa,wB:wb};
+}
+
+const ROUND_NAMES=['First Round','Second Round','Conference Finals','Stanley Cup Final'];
+
+function simPlayoffRound() {
+  ensureSimState();
+  if (GS.simPhase!=='playoffs'||!GS.playoffState) return;
+  const ps=GS.playoffState;
+  const rName=ROUND_NAMES[ps.round]||'Round '+(ps.round+1);
+  const nextE=[], nextW=[];
+
+  if (ps.round<3) {
+    ['East','West'].forEach(conf=>{
+      const next=conf==='East'?nextE:nextW;
+      (ps.bracket[conf]||[]).forEach(([a,b])=>{
+        if(!a||!b) return;
+        const s=simSeries(a,b);
+        ps.history.push({round:rName,conf,...s});
+        next.push(s.winner);
+        addNews(rName.toUpperCase().slice(0,8),'tag-trade',
+          `${TEAMS[s.winner]?.name||s.winner} eliminate ${TEAMS[s.loser]?.name||s.loser} 4-${Math.min(s.wA,s.wB)}.`);
+      });
+    });
+    ps.round++;
+    if (ps.round===1) {
+      ps.bracket={
+        East:[[nextE[0],nextE[1]],[nextE[2],nextE[3]]].filter(p=>p[0]&&p[1]),
+        West:[[nextW[0],nextW[1]],[nextW[2],nextW[3]]].filter(p=>p[0]&&p[1]),
+      };
+    } else if (ps.round===2) {
+      ps.bracket={East:[[nextE[0],nextE[1]]].filter(p=>p[0]&&p[1]),West:[[nextW[0],nextW[1]]].filter(p=>p[0]&&p[1])};
+    } else if (ps.round===3) {
+      // Conference Finals done — go to final
+      ps.bracket={Final:[[nextE[0],nextW[0]]]};
+    }
+  } else {
+    // Stanley Cup Final
+    const [a,b]=(ps.bracket.Final||[[]])[0]||[];
+    if (a&&b) {
+      const s=simSeries(a,b);
+      ps.champion=s.winner;
+      ps.history.push({round:'Stanley Cup Final',conf:'Both',...s});
+      const userWon=s.winner===GS.team;
+      addNews('🏆 CHAMPION','tag-sign',
+        `${TEAMS[s.winner]?.name||s.winner} WIN THE STANLEY CUP! Defeat ${TEAMS[s.loser]?.name||s.loser} 4-${Math.min(s.wA,s.wB)}.`);
+      if (userWon) addNews('🎉 VICTORY','tag-sign','YOU ARE THE STANLEY CUP CHAMPION! Incredible!');
+      GS.simPhase='offseason';
+      saveGame();
+    }
+  }
+  saveGame();
+}
+
+function simAllPlayoffs() {
+  let guard=0;
+  while (GS.simPhase==='playoffs'&&!GS.playoffState?.champion&&guard<10) {
+    simPlayoffRound(); guard++;
+  }
+}
+
+// ── Offseason ─────────────────────────────────────────────────
+function runOffseason() {
+  Object.values(ROSTERS).forEach(roster=>{
+    roster.forEach(p=>{
+      p.age=(p.age||25)+1;
+      if (p.yrs>0) p.yrs--;
+      p.g=0;p.a=0;p.pts=0;p.gp=0;
+      // Development/decline curve
+      if      (p.age<=24) p.rtg=Math.min(99,(p.rtg||75)+Math.floor(Math.random()*3));
+      else if (p.age<=28) p.rtg=Math.min(99,(p.rtg||75)+Math.floor(Math.random()*2)-1);
+      else if (p.age>=34) p.rtg=Math.max(55,(p.rtg||75)-Math.floor(Math.random()*3));
+    });
+  });
+  GS.week=1; GS.simPhase='preseason'; GS.injuries=[];
+  GS.results=[]; GS.playoffState=null;
+  initStandings();
+  generateSchedule();
+  addNews('OFFSEASON','tag-info','New season! All players aged. Stats reset. Contracts decremented.');
+  saveGame();
+}
+
+// ── Start regular season ──────────────────────────────────────
+function startRegularSeason() {
+  ensureSimState();
+  initStandings();
+  generateSchedule();
+  GS.simPhase='regular'; GS.week=1; GS.injuries=[]; GS.results=[];
+  addNews('SEASON START','tag-sign',`The 2025-26 NHL Season is underway! Good luck.`);
+  saveGame(); renderSim(); renderDash();
+}
+
+// ── Render Simulation view ────────────────────────────────────
+function renderSim() {
+  ensureSimState();
+  const abbr   = GS.team;
+  const t      = TEAMS[abbr];
+  const phase  = GS.simPhase;
+  const st     = GS.standings?.[abbr]||{gp:0,w:0,l:0,otl:0,pts:0,gf:0,ga:0};
+  const str    = teamStrength(abbr);
+  const ps     = GS.playoffState;
+  const champ  = ps?.champion;
+
+  // Division standings
+  const divTeams = Object.keys(TEAMS)
+    .filter(a=>TEAMS[a].div===t.div)
+    .sort((a,b)=>(GS.standings[b]?.pts||0)-(GS.standings[a]?.pts||0));
+
+  // Recent games (user's team)
+  const recent = [...(GS.results||[])]
+    .filter(r=>r.w===abbr||r.l===abbr)
+    .slice(-6).reverse();
+
+  // Playoff history latest 6
+  const plyHist = (ps?.history||[]).slice(-6).reverse();
+
+  // User's playoff status
+  const inBracket = ps && !champ && (
+    Object.values(ps.bracket).flat().flat().includes(abbr)
+  );
+
+  $('view-sim').innerHTML = `
+    <div class="vtitle">SEASON SIMULATION</div>
+
+    <!-- Status banner -->
+    <div style="background:var(--bg2);border:1px solid ${phase==='playoffs'?'var(--gold)':phase==='offseason'?'var(--green)':'var(--border)'};border-radius:6px;padding:14px 18px;margin-bottom:13px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">
+          ${phase==='preseason'?'PRE-SEASON':phase==='regular'?'REGULAR SEASON — WEEK '+GS.week+' / '+NUM_WEEKS:phase==='playoffs'?'PLAYOFFS — ROUND '+((ps?.round||0)+1):phase==='offseason'?'OFFSEASON':'—'}
+        </div>
+        <div style="font-size:22px;font-weight:900;font-family:var(--mono)">
+          ${phase==='regular'||phase==='preseason'?st.w+'-'+st.l+'-'+st.otl:champ?'🏆 '+(TEAMS[champ]?.name||champ):phase==='playoffs'?'In Progress':'Season Complete'}
+        </div>
+        ${phase==='regular'?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${st.gp} GP · ${st.pts} PTS · Team Strength: <span style="color:${str>=85?'var(--green)':str>=75?'var(--gold)':'var(--red)'}">${str}</span></div>`:''}
+        ${champ&&champ===abbr?`<div style="color:var(--green);font-size:12px;margin-top:4px">🎉 YOUR TEAM IS CHAMPION!</div>`:''}
+        ${champ&&champ!==abbr?`<div style="color:var(--text2);font-size:11px;margin-top:2px">Season ended. Click New Season to continue.</div>`:''}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        ${phase==='preseason'?`<button class="btn btn-ice" onclick="startRegularSeason()">▶ Start Season</button>`:''}
+        ${phase==='regular'?`
+          <button class="btn btn-outline" onclick="simWeeks(1);renderSim();renderDash()">Sim 1 Week</button>
+          <button class="btn btn-outline" onclick="simWeeks(4);renderSim();renderDash()">Sim Month</button>
+          <button class="btn btn-ice"     onclick="simToPlayoffs();renderSim();renderDash()">Sim to Playoffs</button>
+        `:''}
+        ${phase==='playoffs'&&!champ?`
+          <button class="btn btn-outline" onclick="simPlayoffRound();renderSim();renderDash()">Sim Round</button>
+          <button class="btn btn-ice"     onclick="simAllPlayoffs();renderSim();renderDash()">Sim All Playoffs</button>
+        `:''}
+        ${phase==='offseason'||champ?`<button class="btn btn-ice" onclick="runOffseason();renderSim();renderDash()">New Season</button>`:''}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+      <!-- Division standings -->
+      <div class="panel">
+        <div class="ptitle">${t.div.toUpperCase()} DIVISION</div>
+        <table class="tbl"><thead><tr><th>#</th><th>TEAM</th><th>GP</th><th>W</th><th>L</th><th>OTL</th><th>PTS</th><th>STR</th></tr></thead>
+        <tbody>
+          ${divTeams.map((a,i)=>{
+            const s=GS.standings[a]||{gp:0,w:0,l:0,otl:0,pts:0};
+            const me=a===abbr;
+            return `<tr style="${me?'background:rgba(79,195,247,.07)':''}">
+              <td class="mono tdim">${i+1}</td>
+              <td><div style="display:flex;align-items:center;gap:7px">
+                <div style="width:16px;height:16px;border-radius:2px;background:${TEAMS[a].c1};flex-shrink:0"></div>
+                <span style="${me?'color:var(--ice);font-weight:600':''}">${TEAMS[a]?.name||a}</span>
+              </div></td>
+              <td class="mono">${s.gp}</td><td class="mono">${s.w}</td>
+              <td class="mono">${s.l}</td><td class="mono">${s.otl}</td>
+              <td class="mono" style="font-weight:700">${s.pts}</td>
+              <td><span class="rtg badge ${rtgClass(teamStrength(a))}">${teamStrength(a)}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+      </div>
+
+      <div>
+        <!-- Recent results -->
+        <div class="panel" style="margin-bottom:13px">
+          <div class="ptitle">RECENT RESULTS</div>
+          ${recent.length?recent.map(r=>{
+            const won=r.w===abbr;
+            const opp=won?r.l:r.w;
+            const ug=won?r.wg:r.lg, og=won?r.lg:r.wg;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--border)">
+              <span class="badge ${won?'b-ntc':'b-ir'}" style="width:22px;text-align:center">${won?'W':'L'}</span>
+              <span style="flex:1;font-size:11px">${TEAMS[opp]?.name||opp}</span>
+              <span class="mono" style="font-weight:600;font-size:11px">${ug}–${og}</span>
+              ${r.ot?'<span class="mono tdim" style="font-size:9px">OT</span>':''}
+            </div>`;
+          }).join(''):`<div class="pbody tdim" style="font-size:11px">No games played yet.</div>`}
+        </div>
+
+        <!-- Playoff bracket or offseason -->
+        ${phase==='playoffs'&&ps?`
+        <div class="panel">
+          <div class="ptitle">PLAYOFF RESULTS</div>
+          <div style="padding:4px 0">
+            ${plyHist.map(r=>`
+              <div style="padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px">
+                <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">${r.round.toUpperCase()}</div>
+                <div style="display:flex;justify-content:space-between">
+                  <span style="${r.winner===abbr?'color:var(--green);font-weight:600':''}">${TEAMS[r.winner]?.name||r.winner}</span>
+                  <span class="mono tdim">def. ${TEAMS[r.loser]?.name||r.loser} 4-${Math.min(r.wA,r.wB)}</span>
+                </div>
+              </div>`).join('')||'<div class="pbody tdim" style="font-size:11px">Round not yet played.</div>'}
+          </div>
+        </div>`:''}
+
+        ${phase==='preseason'?`
+        <div class="panel">
+          <div class="ptitle">HOW TO USE</div>
+          <div class="pbody" style="font-size:11px;color:var(--text2);line-height:1.8">
+            <div>▶ <strong>Start Season</strong> — begins Week 1 of 26</div>
+            <div>▶ <strong>Sim 1 Week</strong> — plays ~3 games per team</div>
+            <div>▶ <strong>Sim Month</strong> — advances 4 weeks at once</div>
+            <div>▶ <strong>Sim to Playoffs</strong> — completes entire regular season</div>
+            <div>▶ <strong>Sim Round</strong> — simulates one playoff round</div>
+            <div>▶ <strong>New Season</strong> — ages players, resets stats</div>
+          </div>
+        </div>`:''}
+      </div>
+    </div>`;
+}
+
+</script>
+</body>
+</html>
